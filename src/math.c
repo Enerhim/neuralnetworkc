@@ -1,6 +1,5 @@
 #include "../include/math.h"
-#include <stdint.h>
-#include <stdio.h>
+#include <math.h>
 
 Matrix createMatrix(uint64_t rows, uint64_t cols) {
   Matrix mat;
@@ -105,4 +104,40 @@ void printMatrix(Matrix A) {
       printf("\n");
   }
   printf("]\n");
+}
+
+void transposeMatrix(Matrix A, Matrix *result) {
+  for (uint64_t i = 0; i < A.rows; i++) {
+    for (uint64_t j = 0; j < A.rows; j++) {
+      result->data[j * result->rows + i] = A.data[i * A.cols + j];
+    }
+  }
+}
+
+void reluMatrix(Matrix *A) {
+  for (uint64_t i = 0; i < A->rows * A->cols; i++) {
+    A->data[i] = MAX(A->data[i], 0.0);
+  }
+}
+
+void sigmoidMatrix(Matrix *A) {
+  for (uint64_t i = 0; i < A->rows * A->cols; i++) {
+    A->data[i] = 1.0 / (1 + exp(-A->data[i]));
+  }
+}
+
+void linearMatrix(Matrix *A) { return; }
+
+void softmaxMatrix(Matrix *A) {
+  for (uint64_t i = 0; i < A->rows; i++) {
+    float sum = 0.0;
+
+    for (uint64_t j = 0; j < A->cols; j++) {
+      sum += exp(A->data[i * A->cols + j]);
+    }
+
+    for (uint64_t j = 0; j < A->cols; j++) {
+      A->data[i * A->cols + j] = exp(A->data[i * A->cols + j]) / sum;
+    }
+  }
 }

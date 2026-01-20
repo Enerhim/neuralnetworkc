@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define MIN(a, b) (a < b ? a : b)
+#define MAX(a, b) (a > b ? a : b)
+
 typedef struct {
   float *data;
   uint64_t rows, cols;
@@ -21,3 +24,10 @@ void mulMatrices(Matrix A, Matrix B, Matrix *result);
 void freeMatrix(Matrix *A);
 
 void printMatrix(Matrix A);
+
+void transposeMatrix(Matrix A, Matrix *result);
+
+void reluMatrix(Matrix *A);
+void sigmoidMatrix(Matrix *A);
+void linearMatrix(Matrix *A);
+void softmaxMatrix(Matrix *A);

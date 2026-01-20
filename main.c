@@ -1,15 +1,12 @@
 #include "include/math.h"
 
 int main(void) {
-  Matrix mat = createMatrix(3, 2);
-  Matrix matu = createMatrix(3, 2);
+  Matrix mat = createMatrix(3, 40);
 
-  fillMatrix(&mat, 2.0);
+  fillMatrix(&mat, 1.0);
 
-  copyMatrix(mat, &matu);
-
-  printMatrix(matu);
+  softmaxMatrix(&mat);
+  printMatrix(mat);
 
   freeMatrix(&mat);
-  freeMatrix(&matu);
 }
