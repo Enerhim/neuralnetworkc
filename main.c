@@ -1,12 +1,16 @@
-#include "include/math.h"
+#include "include/ml.h"
 
 int main(void) {
-  Matrix mat = createMatrix(3, 40);
+  srand(time(NULL));
 
-  fillMatrix(&mat, 1.0);
+  uint64_t units[] = {16, 16, 10};
+  uint8_t activations[] = {2, 2, 3};
 
-  softmaxMatrix(&mat);
-  printMatrix(mat);
+  NeuralNetwork net = createNetwork(3, units, activations, 784);
 
-  freeMatrix(&mat);
+  for (uint64_t i = 0; i < net.noLayers; i++) {
+    printMatrix(net.layers[i].weights);
+  }
+
+  freeNetwork(&net);
 }

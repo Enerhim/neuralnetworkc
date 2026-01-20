@@ -1,9 +1,10 @@
+#pragma once
 #include <inttypes.h>
-#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #define MIN(a, b) (a < b ? a : b)
 #define MAX(a, b) (a > b ? a : b)
@@ -14,6 +15,7 @@ typedef struct {
 } Matrix;
 
 Matrix createMatrix(uint64_t rows, uint64_t cols);
+Matrix createRandomMatrix(uint64_t rows, uint64_t cols);
 void copyMatrix(Matrix original, Matrix *target);
 
 void fillMatrix(Matrix *A, float fill_val);
@@ -25,7 +27,7 @@ void freeMatrix(Matrix *A);
 
 void printMatrix(Matrix A);
 
-void transposeMatrix(Matrix A, Matrix *result);
+void transposeMatrix(Matrix *A);
 
 void reluMatrix(Matrix *A);
 void sigmoidMatrix(Matrix *A);

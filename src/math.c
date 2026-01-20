@@ -11,6 +11,14 @@ Matrix createMatrix(uint64_t rows, uint64_t cols) {
   return mat;
 }
 
+Matrix createRandomMatrix(uint64_t rows, uint64_t cols) {
+  Matrix random_ = createMatrix(rows, cols);
+  for (uint64_t i = 0; i < rows * cols; i++) {
+    random_.data[i] = (float)rand() / (float)RAND_MAX;
+  }
+  return random_;
+}
+
 void copyMatrix(Matrix original, Matrix *target) {
   if (original.rows != target->rows || original.cols != target->cols) {
     fprintf(stderr,
@@ -103,15 +111,22 @@ void printMatrix(Matrix A) {
     if (i != A.rows - 1)
       printf("\n");
   }
-  printf("]\n");
+  printf("]\n Shape: (%" PRIu64 " x %" PRIu64 "), Total Elements: %" PRIu64
+         "\nSize = %zu Bytes",
+         A.rows, A.cols, A.rows * A.cols, sizeof(float) * A.rows * A.cols);
 }
 
-void transposeMatrix(Matrix A, Matrix *result) {
-  for (uint64_t i = 0; i < A.rows; i++) {
-    for (uint64_t j = 0; j < A.rows; j++) {
-      result->data[j * result->rows + i] = A.data[i * A.cols + j];
+void transposeMatrix(Matrix *A) {
+  Matrix result = createMatrix(A->cols, A->rows);
+
+  for (uint64_t i = 0; i < A->rows; i++) {
+    for (uint64_t j = 0; j < A->rows; j++) {
+      result.data[j * result.rows + i] = A->data[i * A->cols + j];
     }
   }
+  freeMatrix(A);
+  *A = createMatrix(result.rows, result.cols);
+  copyMatrix(result, A);
 }
 
 void reluMatrix(Matrix *A) {
