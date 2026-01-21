@@ -1,6 +1,4 @@
 #include "../include/math.h"
-#include <math.h>
-#include <stdint.h>
 
 Matrix createMatrix(uint64_t rows, uint64_t cols) {
   Matrix mat;
@@ -15,7 +13,7 @@ Matrix createMatrix(uint64_t rows, uint64_t cols) {
 Matrix createRandomMatrix(uint64_t rows, uint64_t cols) {
   Matrix random_ = createMatrix(rows, cols);
   for (uint64_t i = 0; i < rows * cols; i++) {
-    random_.data[i] = (float)rand() / (float)RAND_MAX;
+    random_.data[i] = (float)rand() / (float)RAND_MAX - 0.5;
   }
   return random_;
 }
@@ -156,8 +154,7 @@ void transposeMatrix(Matrix *A) {
     }
   }
   freeMatrix(A);
-  *A = createMatrix(result.rows, result.cols);
-  copyMatrix(result, A);
+  *A = result;
 }
 
 void reluMatrix(Matrix *A) {

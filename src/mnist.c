@@ -68,7 +68,7 @@ Matrix load_mnist_labels(const char *path, uint64_t *out_count, uint32_t size) {
     exit(1);
   }
 
-  uint8_t *buffer = malloc(size * sizeof(uint8_t));
+  uint8_t buffer[size];
 
   fread(buffer, 1, size, f);
 

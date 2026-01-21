@@ -32,9 +32,9 @@ NeuralNetwork createNetwork(uint64_t noLayers, uint64_t *units,
 }
 
 Matrix inferenceNN(NeuralNetwork *nn, Matrix X) {
-  transposeMatrix(&X);
   Matrix A = createMatrix(X.rows, X.cols);
   copyMatrix(X, &A);
+  transposeMatrix(&A);
 
   for (uint64_t i = 0; i < nn->noLayers; i++) {
     Matrix dotProduct = createMatrix(nn->layers[i].weights.rows, A.cols);
