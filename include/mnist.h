@@ -6,4 +6,4 @@
 
 uint32_t read_u32_be(FILE *f);
 Matrix *load_mnist_dataset(const char *path, uint64_t *noImages);
-uint8_t *load_mnist_labels(const char *path, uint64_t *out_count);
+Matrix load_mnist_labels(const char *path, uint64_t *out_count);

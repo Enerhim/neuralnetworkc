@@ -1,8 +1,7 @@
 #include "../include/mnist.h"
 #include "../include/math.h"
-#include <stdint.h>
-#include <stdio.h>
 // Changing the endian from big to small
+
 uint32_t read_u32_be(FILE *f) {
   uint8_t b[4];
   fread(b, 1, 4, f);
@@ -47,20 +46,23 @@ Matrix *load_mnist_dataset(const char *path, uint64_t *noImages) {
   return images;
 }
 
-uint8_t *load_mnist_labels(const char *path, uint64_t *out_count) {
+Matrix load_mnist_labels(const char *path, uint64_t *out_count) {
   FILE *f = fopen(path, "rb");
-  if (!f)
-    return NULL;
+  if (!f) {
+    fprintf(stderr, "Error: Unable to open file %s", path);
+    exit(1);
+  }
 
   if (read_u32_be(f) != 0x00000801) {
     fprintf(stderr, "Invalid MNIST label file\n");
     fclose(f);
-    return NULL;
+    exit(1);
   }
 
   uint32_t count = read_u32_be(f);
-  uint8_t *labels = malloc(count);
-  fread(labels, 1, count, f);
+  Matrix labels = createMatrix(count, 1);
+
+  fread(&labels.data, 1, count, f);
 
   fclose(f);
   *out_count = count;
