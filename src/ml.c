@@ -1,7 +1,8 @@
 #include "../include/ml.h"
 
 NeuralNetwork createNetwork(uint64_t noLayers, uint64_t *units,
-                            uint8_t *activations, uint64_t inputSize) {
+                            ActivationFunction *activations,
+                            uint64_t inputSize) {
   NeuralNetwork network;
   network.noLayers = noLayers;
   network.layers = malloc(network.noLayers * sizeof(Layer));
@@ -35,8 +36,6 @@ Matrix inferenceNN(NeuralNetwork *nn, Matrix X) {
   copyMatrix(X, &A);
 
   for (uint64_t i = 0; i < nn->noLayers; i++) {
-    transposeMatrix(&A);
-
     Matrix dotProduct = createMatrix(nn->layers[i].weights.rows, A.cols);
     mulMatrices(nn->layers[i].weights, A, &dotProduct);
 
@@ -48,22 +47,8 @@ Matrix inferenceNN(NeuralNetwork *nn, Matrix X) {
 
     freeMatrix(&A);
     A = createMatrix(Z.rows, Z.cols);
-
-    transposeMatrix(&A);
-    switch (nn->layers[i].activation) {
-    case 0:
-      linearMatrix(&A);
-      break;
-    case 1:
-      sigmoidMatrix(&A);
-      break;
-    case 2:
-      reluMatrix(&A);
-      break;
-    case 3:
-      softmaxMatrix(&A);
-      break;
-    }
+    nn->layers->activation(&Z);
+    copyMatrix(Z, &A);
 
     freeMatrix(&extendedBias);
     freeMatrix(&Z);
@@ -76,6 +61,7 @@ Matrix inferenceNN(NeuralNetwork *nn, Matrix X) {
 void freeNetwork(NeuralNetwork *network) {
   for (uint64_t i = 0; i < network->noLayers; i++) {
     freeMatrix(&network->layers[i].weights);
+    freeMatrix(&network->layers[i].bias);
   }
 
   free(network->layers);

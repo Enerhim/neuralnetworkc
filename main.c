@@ -5,12 +5,12 @@ int main(void) {
   srand(time(NULL));
 
   uint64_t units[] = {16, 16, 10};
-  uint8_t activations[] = {2, 2, 3};
+  ActivationFunction activations[] = {reluMatrix, reluMatrix, softmaxMatrix};
 
   NeuralNetwork net = createNetwork(3, units, activations, 5);
 
   Matrix test = createMatrix(5, 1);
-  fillMatrix(&test, 4.0);
+  fillMatrix(&test, 1.0);
 
   Matrix result = inferenceNN(&net, test);
 

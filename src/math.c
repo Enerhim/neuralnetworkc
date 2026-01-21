@@ -150,8 +150,8 @@ void transposeMatrix(Matrix *A) {
   Matrix result = createMatrix(A->cols, A->rows);
 
   for (uint64_t i = 0; i < A->rows; i++) {
-    for (uint64_t j = 0; j < A->rows; j++) {
-      result.data[j * result.rows + i] = A->data[i * A->cols + j];
+    for (uint64_t j = 0; j < A->cols; j++) {
+      result.data[j * result.cols + i] = A->data[i * A->cols + j];
     }
   }
   freeMatrix(A);
@@ -174,6 +174,7 @@ void sigmoidMatrix(Matrix *A) {
 void linearMatrix(Matrix *A) { return; }
 
 void softmaxMatrix(Matrix *A) {
+  transposeMatrix(A);
   for (uint64_t i = 0; i < A->rows; i++) {
     float sum = 0.0;
 
@@ -185,4 +186,5 @@ void softmaxMatrix(Matrix *A) {
       A->data[i * A->cols + j] = exp(A->data[i * A->cols + j]) / sum;
     }
   }
+  transposeMatrix(A);
 }
