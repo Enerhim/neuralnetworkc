@@ -1,5 +1,4 @@
 #include "../include/ml.h"
-#include <stdint.h>
 
 NeuralNetwork createNetwork(uint64_t noLayers, uint64_t *units,
                             uint8_t *activations, uint64_t inputSize) {
@@ -25,18 +24,53 @@ NeuralNetwork createNetwork(uint64_t noLayers, uint64_t *units,
     out = units[i];
 
     network.layers[i].weights = createRandomMatrix(out, in);
+    network.layers[i].bias = createRandomMatrix(out, 1);
   }
 
   return network;
 }
 
-void inferenceNN(NeuralNetwork *nn, Matrix X) {
-  transposeMatrix(&X);
+Matrix inferenceNN(NeuralNetwork *nn, Matrix X) {
   Matrix A = createMatrix(X.rows, X.cols);
   copyMatrix(X, &A);
 
   for (uint64_t i = 0; i < nn->noLayers; i++) {
+    transposeMatrix(&A);
+
+    Matrix dotProduct = createMatrix(nn->layers[i].weights.rows, A.cols);
+    mulMatrices(nn->layers[i].weights, A, &dotProduct);
+
+    Matrix extendedBias = createMatrix(nn->layers[i].bias.rows, A.cols);
+    extendVector(nn->layers[i].bias, A.cols, &extendedBias);
+
+    Matrix Z = createMatrix(extendedBias.rows, extendedBias.cols);
+    addMatrices(dotProduct, extendedBias, &Z);
+
+    freeMatrix(&A);
+    A = createMatrix(Z.rows, Z.cols);
+
+    transposeMatrix(&A);
+    switch (nn->layers[i].activation) {
+    case 0:
+      linearMatrix(&A);
+      break;
+    case 1:
+      sigmoidMatrix(&A);
+      break;
+    case 2:
+      reluMatrix(&A);
+      break;
+    case 3:
+      softmaxMatrix(&A);
+      break;
+    }
+
+    freeMatrix(&extendedBias);
+    freeMatrix(&Z);
+    freeMatrix(&dotProduct);
   }
+
+  return A;
 }
 
 void freeNetwork(NeuralNetwork *network) {

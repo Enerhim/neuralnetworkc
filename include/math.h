@@ -23,6 +23,9 @@ void fillMatrix(Matrix *A, float fill_val);
 void addMatrices(Matrix A, Matrix B, Matrix *result);
 void subtractMatrices(Matrix A, Matrix B, Matrix *result);
 void mulMatrices(Matrix A, Matrix B, Matrix *result);
+void scaleMatrix(Matrix *A, float scalar);
+void extendVector(Matrix A, uint64_t n, Matrix *result);
+
 void freeMatrix(Matrix *A);
 
 void printMatrix(Matrix A);

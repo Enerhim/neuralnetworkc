@@ -1,5 +1,6 @@
 #include "../include/math.h"
 #include <math.h>
+#include <stdint.h>
 
 Matrix createMatrix(uint64_t rows, uint64_t cols) {
   Matrix mat;
@@ -91,6 +92,35 @@ void mulMatrices(Matrix A, Matrix B, Matrix *result) {
         result->data[i * result->cols + j] =
             A.data[i * A.cols + k] * B.data[k * B.cols + j];
       }
+    }
+  }
+}
+void scaleMatrix(Matrix *A, float scalar) {
+  for (uint64_t i = 0; i < A->rows * A->cols; i++) {
+    A->data[i] = scalar * A->data[i];
+  }
+}
+void extendVector(Matrix A, uint64_t n, Matrix *result) {
+  // only rowvise extension for now
+  if (A.cols != 1) {
+    fprintf(stderr,
+            "Error: Cannot extend a matrix to a tensor: (%" PRIu64 " x %" PRIu64
+            ")",
+            A.rows, A.cols);
+    return;
+  }
+
+  if (result->rows != A.rows || result->cols != A.cols * n) {
+    fprintf(stderr,
+            "Error: result matrix of wrong shape: A = (%" PRIu64 " x %" PRIu64
+            "), Result = (%" PRIu64 " x %" PRIu64 ") ",
+            A.rows, A.cols, result->rows, result->cols);
+    return;
+  }
+
+  for (uint64_t i = 0; i < A.rows; i++) {
+    for (uint64_t j = 0; j < n; j++) {
+      result->data[i * n + j] = A.data[i];
     }
   }
 }
