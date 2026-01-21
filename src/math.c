@@ -88,10 +88,11 @@ void mulMatrices(Matrix A, Matrix B, Matrix *result) {
 
   for (uint64_t i = 0; i < A.rows; i++) {
     for (uint64_t j = 0; j < B.cols; j++) {
+      float sum = 0.0;
       for (uint64_t k = 0; k < A.cols; k++) {
-        result->data[i * result->cols + j] =
-            A.data[i * A.cols + k] * B.data[k * B.cols + j];
+        sum += A.data[i * A.cols + k] * B.data[k * B.cols + j];
       }
+      result->data[i * result->cols + j] = sum;
     }
   }
 }

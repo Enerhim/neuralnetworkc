@@ -32,6 +32,7 @@ NeuralNetwork createNetwork(uint64_t noLayers, uint64_t *units,
 }
 
 Matrix inferenceNN(NeuralNetwork *nn, Matrix X) {
+  transposeMatrix(&X);
   Matrix A = createMatrix(X.rows, X.cols);
   copyMatrix(X, &A);
 

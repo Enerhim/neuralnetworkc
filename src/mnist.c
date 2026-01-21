@@ -1,5 +1,6 @@
 #include "../include/mnist.h"
 #include "../include/math.h"
+#include <stdint.h>
 // Changing the endian from big to small
 
 uint32_t read_u32_be(FILE *f) {
@@ -8,36 +9,37 @@ uint32_t read_u32_be(FILE *f) {
   return (b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3];
 }
 
-Matrix *load_mnist_dataset(const char *path, uint64_t *noImages) {
+Matrix load_mnist_dataset(const char *path, uint64_t *noImages, uint32_t size) {
   FILE *f = fopen(path, "rb");
 
   if (!f) {
     fprintf(stderr, "Error: Unable to open file %s", path);
-    return NULL;
+    exit(1);
   }
 
   uint32_t magic = read_u32_be(f);
   if (magic != 0x00000803) {
     fprintf(stderr, "Invalid Image File\n");
     fclose(f);
-    return NULL;
+    exit(1);
   }
 
   uint32_t count_ = read_u32_be(f);
   uint32_t rows = read_u32_be(f);
   uint32_t cols = read_u32_be(f);
 
-  Matrix *images = malloc(sizeof(Matrix) * count_);
+  if (count_ < size) {
+    fprintf(stderr, "Error: number of demanded elements greater than elements");
+    exit(1);
+  }
 
-  uint8_t buffer[784];
+  Matrix images = createMatrix(size, rows * cols);
+  uint8_t buffer[rows * cols];
 
-  for (uint64_t i = 0; i < count_; i++) {
-    images[i] = createMatrix(rows, cols);
-
+  for (uint64_t i = 0; i < size; i++) {
     fread(buffer, 1, rows * cols, f);
-
     for (uint32_t j = 0; j < rows * cols; j++) {
-      images[i].data[j] = buffer[j] / 255.0;
+      images.data[i * cols * rows + j] = buffer[j] / 255.0;
     }
   }
 
@@ -46,7 +48,7 @@ Matrix *load_mnist_dataset(const char *path, uint64_t *noImages) {
   return images;
 }
 
-Matrix load_mnist_labels(const char *path, uint64_t *out_count) {
+Matrix load_mnist_labels(const char *path, uint64_t *out_count, uint32_t size) {
   FILE *f = fopen(path, "rb");
   if (!f) {
     fprintf(stderr, "Error: Unable to open file %s", path);
@@ -59,12 +61,23 @@ Matrix load_mnist_labels(const char *path, uint64_t *out_count) {
     exit(1);
   }
 
-  uint32_t count = read_u32_be(f);
-  Matrix labels = createMatrix(count, 1);
+  uint32_t count_ = read_u32_be(f);
 
-  fread(&labels.data, 1, count, f);
+  if (count_ < size) {
+    fprintf(stderr, "Error: number of demanded elements greater than elements");
+    exit(1);
+  }
+
+  uint8_t *buffer = malloc(size * sizeof(uint8_t));
+
+  fread(buffer, 1, size, f);
+
+  Matrix labels = createMatrix(size, 1);
+
+  for (uint64_t i = 0; i < size; i++)
+    labels.data[i] = (float)buffer[i];
 
   fclose(f);
-  *out_count = count;
+  *out_count = count_;
   return labels;
 }

@@ -7,19 +7,19 @@ int main(void) {
 
   uint64_t n_train_images, n_test_images, n_train_labels, n_test_labels;
 
-  Matrix *X_train =
-      load_mnist_dataset("./data/train-images-idx3-ubyte", &n_train_images);
+  Matrix X_train =
+      load_mnist_dataset("./data/train-images-idx3-ubyte", &n_train_images, 20);
   Matrix y_train =
-      load_mnist_labels("./data/train-labels-idx1-ubyte", &n_train_labels);
+      load_mnist_labels("./data/train-labels-idx1-ubyte", &n_train_labels, 20);
 
   uint64_t units[] = {16, 16, 10};
-  ActivationFunction activations[] = {reluMatrix, reluMatrix, softmaxMatrix};
+  ActivationFunction activations[] = {reluMatrix, reluMatrix, linearMatrix};
 
-  NeuralNetwork net = createNetwork(3, units, activations, 5);
+  NeuralNetwork net = createNetwork(3, units, activations, 784);
 
   Matrix test = createRandomMatrix(5, 5);
 
-  Matrix result = inferenceNN(&net, test);
+  Matrix result = inferenceNN(&net, X_train);
 
   printMatrix(result);
 
@@ -27,11 +27,7 @@ int main(void) {
   freeMatrix(&result);
   freeNetwork(&net);
 
-  for (uint64_t i = 0; i < n_train_labels; i++) {
-    freeMatrix(&X_train[i]);
-  }
+  freeMatrix(&X_train);
   freeMatrix(&y_train);
-  free(X_train);
-
   return 0;
 }
