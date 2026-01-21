@@ -38,3 +38,5 @@ void reluMatrix(Matrix *A);
 void sigmoidMatrix(Matrix *A);
 void linearMatrix(Matrix *A);
 void softmaxMatrix(Matrix *A);
+
+float MSELoss(Matrix y, Matrix y_hat);

@@ -188,3 +188,23 @@ void softmaxMatrix(Matrix *A) {
   }
   transposeMatrix(A);
 }
+
+float MSELoss(Matrix y, Matrix y_hat) {
+  if (y.rows != y_hat.rows || y.cols != y_hat.cols) {
+    fprintf(stderr,
+            "Error: Unable to add matrices of different sizes: (%" PRIu64
+            " x %" PRIu64 ") and (%" PRIu64 " x %" PRIu64 ")\n",
+            y.rows, y.cols, y_hat.rows, y_hat.cols);
+    return 0;
+  }
+
+  float cost = 0.0;
+
+  for (uint64_t i = 0; i < y.rows * y.cols; i++) {
+    cost += pow(y.data[i] - y_hat.data[i], 2);
+  }
+
+  cost /= (float)y.rows;
+
+  return cost;
+}

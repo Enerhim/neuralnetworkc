@@ -9,8 +9,7 @@ int main(void) {
 
   NeuralNetwork net = createNetwork(3, units, activations, 5);
 
-  Matrix test = createMatrix(5, 1);
-  fillMatrix(&test, 1.0);
+  Matrix test = createRandomMatrix(5, 5);
 
   Matrix result = inferenceNN(&net, test);
 

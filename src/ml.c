@@ -47,7 +47,7 @@ Matrix inferenceNN(NeuralNetwork *nn, Matrix X) {
 
     freeMatrix(&A);
     A = createMatrix(Z.rows, Z.cols);
-    nn->layers->activation(&Z);
+    nn->layers[i].activation(&Z);
     copyMatrix(Z, &A);
 
     freeMatrix(&extendedBias);
