@@ -1,6 +1,5 @@
 #include "../include/mnist.h"
 #include "../include/math.h"
-#include <stdint.h>
 // Changing the endian from big to small
 
 uint32_t read_u32_be(FILE *f) {
@@ -34,7 +33,12 @@ Matrix load_mnist_dataset(const char *path, uint64_t *noImages, uint32_t size) {
   }
 
   Matrix images = createMatrix(size, rows * cols);
-  uint8_t buffer[rows * cols];
+  uint8_t *buffer = (uint8_t *)malloc(rows * size * sizeof(uint8_t));
+  if (!buffer) {
+    fprintf(stderr, "Error: Failed to allocate image buffer of size %" PRIu8,
+            size);
+    exit(1);
+  }
 
   for (uint64_t i = 0; i < size; i++) {
     fread(buffer, 1, rows * cols, f);
@@ -43,6 +47,7 @@ Matrix load_mnist_dataset(const char *path, uint64_t *noImages, uint32_t size) {
     }
   }
 
+  free(buffer);
   fclose(f);
   *noImages = count_;
   return images;
@@ -68,15 +73,20 @@ Matrix load_mnist_labels(const char *path, uint64_t *out_count, uint32_t size) {
     exit(1);
   }
 
-  uint8_t buffer[size];
+  Matrix labels = createMatrix(size, 1);
+  uint8_t *buffer = (uint8_t *)malloc(size * sizeof(uint8_t));
+  if (!buffer) {
+    fprintf(stderr, "Error: Failed to allocate label buffer of size %" PRIu8,
+            size);
+    exit(1);
+  }
 
   fread(buffer, 1, size, f);
-
-  Matrix labels = createMatrix(size, 1);
 
   for (uint64_t i = 0; i < size; i++)
     labels.data[i] = (float)buffer[i];
 
+  free(buffer);
   fclose(f);
   *out_count = count_;
   return labels;

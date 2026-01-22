@@ -6,6 +6,11 @@ NeuralNetwork createNetwork(uint64_t noLayers, uint64_t *units,
   NeuralNetwork network;
   network.noLayers = noLayers;
   network.layers = malloc(network.noLayers * sizeof(Layer));
+  if (!network.layers) {
+    fprintf(stderr, "Error: Failed to allocate %" PRIu64 " layers fo NN",
+            noLayers);
+    exit(1);
+  }
 
   // Initialize weights and activations for each layer
 
@@ -32,27 +37,25 @@ NeuralNetwork createNetwork(uint64_t noLayers, uint64_t *units,
 }
 
 Matrix inferenceNN(NeuralNetwork *nn, Matrix X) {
-  Matrix A = createMatrix(X.rows, X.cols);
-  copyMatrix(X, &A);
-  transposeMatrix(&A);
+  Matrix A = createMatrix(X.cols, X.rows);
+  transposeMatrix(X, &A); // Convert to colum major for now
 
   for (uint64_t i = 0; i < nn->noLayers; i++) {
-    Matrix dotProduct = createMatrix(nn->layers[i].weights.rows, A.cols);
+    uint64_t m = nn->layers[i].weights.rows, n = A.cols;
+    Matrix dotProduct = createMatrix(m, n);
     mulMatrices(nn->layers[i].weights, A, &dotProduct);
 
-    Matrix extendedBias = createMatrix(nn->layers[i].bias.rows, A.cols);
+    Matrix extendedBias = createMatrix(m, n);
     extendVector(nn->layers[i].bias, A.cols, &extendedBias);
 
-    Matrix Z = createMatrix(extendedBias.rows, extendedBias.cols);
+    Matrix Z = createMatrix(m, n);
     addMatrices(dotProduct, extendedBias, &Z);
 
-    freeMatrix(&A);
-    A = createMatrix(Z.rows, Z.cols);
     nn->layers[i].activation(&Z);
-    copyMatrix(Z, &A);
+    freeMatrix(&A);
+    A = Z;
 
     freeMatrix(&extendedBias);
-    freeMatrix(&Z);
     freeMatrix(&dotProduct);
   }
 

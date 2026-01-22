@@ -1,12 +1,18 @@
 #include "../include/math.h"
-#include <stdint.h>
 
 Matrix createMatrix(uint64_t rows, uint64_t cols) {
   Matrix mat;
   mat.cols = cols;
   mat.rows = rows;
+  mat.data = (float *)calloc(rows * cols, sizeof(float));
 
-  mat.data = (float *)malloc(sizeof(float) * rows * cols);
+  if (!mat.data) {
+    fprintf(stderr,
+            "Error: Failed to allocate matrix of size: (%" PRIu64 " x %" PRIu64
+            ")",
+            rows, cols);
+    exit(1);
+  }
 
   return mat;
 }
@@ -95,9 +101,9 @@ void mulMatrices(Matrix A, Matrix B, Matrix *result) {
     }
   }
 }
-void scaleMatrix(Matrix *A, float scalar) {
-  for (uint64_t i = 0; i < A->rows * A->cols; i++) {
-    A->data[i] = scalar * A->data[i];
+void scaleMatrix(Matrix A, float scalar, Matrix *result) {
+  for (uint64_t i = 0; i < A.rows * A.cols; i++) {
+    result->data[i] = scalar * A.data[i];
   }
 }
 void extendVector(Matrix A, uint64_t n, Matrix *result) {
@@ -146,57 +152,61 @@ void printMatrix(Matrix A) {
          A.rows, A.cols, A.rows * A.cols, sizeof(float) * A.rows * A.cols);
 }
 
-void transposeMatrix(Matrix *A) {
-  Matrix result = createMatrix(A->cols, A->rows);
+void transposeMatrix(Matrix A, Matrix *result) {
+  if (A.rows != result->cols || A.cols != result->rows) {
+    fprintf(stderr,
+            "Error: result matrix is of wrong size. A = (%" PRIu64 " x %" PRIu64
+            "), result* = (%" PRIu64 " x %" PRIu64 ")",
+            A.rows, A.cols, result->rows, result->cols);
+    return;
+  }
 
-  for (uint64_t i = 0; i < A->rows; i++) {
-    for (uint64_t j = 0; j < A->cols; j++) {
-      result.data[j * result.cols + i] = A->data[i * A->cols + j];
+  for (uint64_t i = 0; i < A.rows; i++) {
+    for (uint64_t j = 0; j < A.cols; j++) {
+      result->data[j * result->cols + i] = A.data[i * A.cols + j];
     }
   }
-  freeMatrix(A);
-  *A = result;
 }
 
-void reluMatrix(Matrix *A) {
+// Activations
+
+void relu(Matrix *A) {
   for (uint64_t i = 0; i < A->rows * A->cols; i++) {
     A->data[i] = MAX(A->data[i], 0.0);
   }
 }
 
-void sigmoidMatrix(Matrix *A) {
+void sigmoid(Matrix *A) {
   for (uint64_t i = 0; i < A->rows * A->cols; i++) {
     A->data[i] = 1.0 / (1 + exp(-A->data[i]));
   }
 }
 
-void linearMatrix(Matrix *A) { return; }
+void linear(Matrix *A) { return; }
 
-void softmaxMatrix(Matrix *A) {
-  transposeMatrix(A);
+void softmax(Matrix *A) {
   for (uint64_t i = 0; i < A->rows; i++) {
-    float sum = 0.0;
-
+    float max_value = A->data[i * A->cols];
     for (uint64_t j = 0; j < A->cols; j++) {
-      sum += exp(A->data[i * A->cols + j]);
+      if (A->data[i * A->cols + j] > max_value) {
+        max_value = A->data[i * A->cols + j];
+      }
+    }
+
+    float sum = 0.0;
+    for (uint64_t j = 0; j < A->cols; j++) {
+      sum += exp(A->data[i * A->cols + j] - max_value);
     }
 
     for (uint64_t j = 0; j < A->cols; j++) {
-      A->data[i * A->cols + j] = exp(A->data[i * A->cols + j]) / sum;
+      A->data[i * A->cols + j] =
+          exp(A->data[i * A->cols + j] - max_value) / sum;
     }
   }
-  transposeMatrix(A);
 }
 
-Matrix getHighestIndexes(Matrix outputs) {
-  Matrix result = createMatrix(outputs.rows, 1);
-
+void getHighestIndexes(Matrix outputs, Matrix *result) {
   for (uint64_t i = 0; i < outputs.rows; i++) {
-
-    for (uint64_t j = 0; j < outputs.cols; j++)
-      printf("%f ", outputs.data[i * outputs.cols + j]);
-    printf("\n");
-
     uint64_t max_index = 0;
     float max_value = outputs.data[i * outputs.cols];
 
@@ -206,16 +216,15 @@ Matrix getHighestIndexes(Matrix outputs) {
         max_value = outputs.data[i * outputs.cols + j];
       }
     }
-    result.data[i] = max_index;
+    result->data[i] = max_index;
   }
-  return result;
 }
 
 float MSELoss(Matrix y, Matrix y_hat) {
   if (y.rows != y_hat.rows || y.cols != y_hat.cols) {
     fprintf(stderr,
-            "Error: Unable to add matrices of different sizes: (%" PRIu64
-            " x %" PRIu64 ") and (%" PRIu64 " x %" PRIu64 ")\n",
+            "Error: Unable to calculate MSE Loss of different sized matrices: "
+            "(%" PRIu64 " x %" PRIu64 ") and (%" PRIu64 " x %" PRIu64 ")\n",
             y.rows, y.cols, y_hat.rows, y_hat.cols);
     return 0;
   }

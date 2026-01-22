@@ -13,27 +13,22 @@ int main(void) {
       load_mnist_labels("./data/train-labels-idx1-ubyte", &n_train_labels, 5);
 
   uint64_t units[] = {16, 16, 10};
-  ActivationFunction activations[] = {reluMatrix, reluMatrix, softmaxMatrix};
+  ActivationFunction activations[] = {relu, relu, softmax};
 
   NeuralNetwork net = createNetwork(3, units, activations, 784);
 
   Matrix logits = inferenceNN(&net, X_train);
-
   Matrix result = createMatrix(logits.rows, logits.cols);
   copyMatrix(logits, &result);
 
-  freeMatrix(&logits);
-
-  transposeMatrix(&result);
-
   Matrix highestIndices = createMatrix(5, 1);
-  copyMatrix(getHighestIndexes(result), &highestIndices);
+  getHighestIndexes(result, &highestIndices);
 
-  printMatrix(highestIndices);
-
-  freeMatrix(&highestIndices);
-  freeMatrix(&result);
   freeNetwork(&net);
+
+  freeMatrix(&logits);
+  freeMatrix(&result);
+  freeMatrix(&highestIndices);
 
   freeMatrix(&X_train);
   freeMatrix(&y_train);

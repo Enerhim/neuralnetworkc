@@ -26,19 +26,19 @@ void fillMatrix(Matrix *A, float fill_val);
 void addMatrices(Matrix A, Matrix B, Matrix *result);
 void subtractMatrices(Matrix A, Matrix B, Matrix *result);
 void mulMatrices(Matrix A, Matrix B, Matrix *result);
-void scaleMatrix(Matrix *A, float scalar);
+void scaleMatrix(Matrix A, float scalar, Matrix *result);
 void extendVector(Matrix A, uint64_t n, Matrix *result);
 
 void freeMatrix(Matrix *A);
 
 void printMatrix(Matrix A);
 
-void transposeMatrix(Matrix *A);
+void transposeMatrix(Matrix A, Matrix *result);
 
-void reluMatrix(Matrix *A);
-void sigmoidMatrix(Matrix *A);
-void linearMatrix(Matrix *A);
-void softmaxMatrix(Matrix *A);
+void relu(Matrix *A);
+void sigmoid(Matrix *A);
+void linear(Matrix *A);
+void softmax(Matrix *A);
 
-Matrix getHighestIndexes(Matrix outputs);
+void getHighestIndexes(Matrix outputs, Matrix *result);
 float MSELoss(Matrix y, Matrix y_hat);
