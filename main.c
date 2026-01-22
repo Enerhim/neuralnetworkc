@@ -8,9 +8,9 @@ int main(void) {
   uint64_t n_train_images, n_test_images, n_train_labels, n_test_labels;
 
   Matrix X_train =
-      load_mnist_dataset("./data/train-images-idx3-ubyte", &n_train_images, 5);
+      load_mnist_dataset("./data/train-images-idx3-ubyte", &n_train_images, 10);
   Matrix y_train =
-      load_mnist_labels("./data/train-labels-idx1-ubyte", &n_train_labels, 5);
+      load_mnist_labels("./data/train-labels-idx1-ubyte", &n_train_labels, 10);
 
   uint64_t units[] = {16, 16, 10};
   ActivationFunction activations[] = {relu, relu, softmax};
@@ -24,6 +24,7 @@ int main(void) {
   Matrix highestIndices = createMatrix(5, 1);
   getHighestIndexes(result, &highestIndices);
 
+  printf("%zu x %zu", net.layers[0].weights.rows, net.layers[0].weights.cols);
   printMatrix(highestIndices);
 
   freeNetwork(&net);

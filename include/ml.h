@@ -18,3 +18,5 @@ NeuralNetwork createNetwork(uint64_t noLayers, uint64_t *units,
                             uint64_t inputSize);
 Matrix inferenceNN(NeuralNetwork *nn, Matrix input);
 void freeNetwork(NeuralNetwork *network);
+void fitNetwork(NeuralNetwork *network, float alpha, Matrix X_train,
+                Matrix y_train);

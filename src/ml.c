@@ -69,6 +69,38 @@ Matrix inferenceNN(NeuralNetwork *nn, Matrix X) {
   return A;
 }
 
+void calculateGradients(Layer *layer, Matrix *w, Matrix *b) {}
+
+// works for cross-entropy and mse loss
+void fitNetwork(NeuralNetwork *network, float alpha, Matrix X_train,
+                Matrix y_train) {
+  for (uint64_t l = 0; l < network->noLayers; l++) {
+    float m = network->layers[l].weights.rows,
+          n = network->layers[l].weights.cols;
+    Matrix dw_l = createMatrix(m, n);
+    Matrix db_l = createMatrix(m, 1);
+    calculateGradients(&network->layers[l], &dw_l, &db_l);
+
+    Matrix w_l_ = createMatrix(m, n);
+    Matrix b_l_ = createMatrix(m, 1);
+
+    for (uint64_t i = 0; i < m; i++) {
+
+      for (uint64_t j = 0; j < n; j++) {
+        w_l_.data[i * w_l_.cols + j] -= alpha * dw_l.data[i * dw_l.cols + j];
+      }
+
+      b_l_.data[i] -= alpha * db_l.data[i];
+
+      copyMatrix(w_l_, &network->layers[l].weights);
+      copyMatrix(b_l_, &network->layers[l].bias);
+
+      freeMatrix(&w_l_);
+      freeMatrix(&b_l_);
+    }
+  }
+}
+
 void freeNetwork(NeuralNetwork *network) {
   for (uint64_t i = 0; i < network->noLayers; i++) {
     freeMatrix(&network->layers[i].weights);
