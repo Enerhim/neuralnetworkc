@@ -8,22 +8,30 @@ int main(void) {
   uint64_t n_train_images, n_test_images, n_train_labels, n_test_labels;
 
   Matrix X_train =
-      load_mnist_dataset("./data/train-images-idx3-ubyte", &n_train_images, 1);
+      load_mnist_dataset("./data/train-images-idx3-ubyte", &n_train_images, 5);
   Matrix y_train =
-      load_mnist_labels("./data/train-labels-idx1-ubyte", &n_train_labels, 1);
+      load_mnist_labels("./data/train-labels-idx1-ubyte", &n_train_labels, 5);
 
   uint64_t units[] = {16, 16, 10};
   ActivationFunction activations[] = {reluMatrix, reluMatrix, softmaxMatrix};
 
   NeuralNetwork net = createNetwork(3, units, activations, 784);
 
-  Matrix test = createRandomMatrix(5, 5);
+  Matrix logits = inferenceNN(&net, X_train);
 
-  Matrix result = inferenceNN(&net, X_train);
+  Matrix result = createMatrix(logits.rows, logits.cols);
+  copyMatrix(logits, &result);
 
-  printMatrix(result);
+  freeMatrix(&logits);
 
-  freeMatrix(&test);
+  transposeMatrix(&result);
+
+  Matrix highestIndices = createMatrix(5, 1);
+  copyMatrix(getHighestIndexes(result), &highestIndices);
+
+  printMatrix(highestIndices);
+
+  freeMatrix(&highestIndices);
   freeMatrix(&result);
   freeNetwork(&net);
 

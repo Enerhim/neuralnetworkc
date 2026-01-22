@@ -1,5 +1,6 @@
 #pragma once
 #include <inttypes.h>
+#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -39,4 +40,5 @@ void sigmoidMatrix(Matrix *A);
 void linearMatrix(Matrix *A);
 void softmaxMatrix(Matrix *A);
 
+Matrix getHighestIndexes(Matrix outputs);
 float MSELoss(Matrix y, Matrix y_hat);

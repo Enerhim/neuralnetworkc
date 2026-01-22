@@ -1,4 +1,5 @@
 #include "../include/math.h"
+#include <stdint.h>
 
 Matrix createMatrix(uint64_t rows, uint64_t cols) {
   Matrix mat;
@@ -185,6 +186,29 @@ void softmaxMatrix(Matrix *A) {
     }
   }
   transposeMatrix(A);
+}
+
+Matrix getHighestIndexes(Matrix outputs) {
+  Matrix result = createMatrix(outputs.rows, 1);
+
+  for (uint64_t i = 0; i < outputs.rows; i++) {
+
+    for (uint64_t j = 0; j < outputs.cols; j++)
+      printf("%f ", outputs.data[i * outputs.cols + j]);
+    printf("\n");
+
+    uint64_t max_index = 0;
+    float max_value = outputs.data[i * outputs.cols];
+
+    for (uint64_t j = 0; j < outputs.cols; j++) {
+      if (outputs.data[i * outputs.cols + j] > max_value) {
+        max_index = j;
+        max_value = outputs.data[i * outputs.cols + j];
+      }
+    }
+    result.data[i] = max_index;
+  }
+  return result;
 }
 
 float MSELoss(Matrix y, Matrix y_hat) {
