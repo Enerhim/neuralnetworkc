@@ -19,6 +19,9 @@ typedef void (*ActivationFunction)(Matrix *A);
 
 Matrix createMatrix(uint64_t rows, uint64_t cols);
 Matrix createRandomMatrix(uint64_t rows, uint64_t cols);
+Matrix createXavierMatrix(uint64_t rows, uint64_t cols, uint64_t fanIn,
+                          uint64_t fanOut);
+Matrix createHeMatrix(uint64_t rows, uint64_t cols, uint64_t fanIn);
 void copyMatrix(Matrix original, Matrix *target);
 
 void fillMatrix(Matrix *A, float fill_val);

@@ -5,7 +5,6 @@ typedef struct {
   uint64_t units;
   Matrix weights;
   Matrix bias;
-  // 0 = Linear, 1 = Sigmoid, 2 = ReLU, 3 = Softmax
   ActivationFunction activation;
 } Layer;
 

@@ -18,11 +18,13 @@ int main(void) {
   NeuralNetwork net = createNetwork(3, units, activations, 784);
 
   Matrix logits = inferenceNN(&net, X_train);
-  Matrix result = createMatrix(logits.rows, logits.cols);
-  copyMatrix(logits, &result);
+  Matrix result = createMatrix(logits.cols, logits.rows);
+  transposeMatrix(logits, &result);
 
   Matrix highestIndices = createMatrix(5, 1);
   getHighestIndexes(result, &highestIndices);
+
+  printMatrix(highestIndices);
 
   freeNetwork(&net);
 

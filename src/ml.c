@@ -29,8 +29,15 @@ NeuralNetwork createNetwork(uint64_t noLayers, uint64_t *units,
     }
     out = units[i];
 
-    network.layers[i].weights = createRandomMatrix(out, in);
-    network.layers[i].bias = createRandomMatrix(out, 1);
+    if (network.layers[i].activation == sigmoid ||
+        network.layers[i].activation == softmax ||
+        network.layers[i].activation == linear) {
+      network.layers[i].weights = createXavierMatrix(out, in, in, out);
+    } else {
+      network.layers[i].weights = createHeMatrix(out, in, in);
+    }
+    network.layers[i].bias = createMatrix(out, 1);
+    fillMatrix(&network.layers[i].bias, 0.0);
   }
 
   return network;

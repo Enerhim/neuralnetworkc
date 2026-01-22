@@ -25,6 +25,29 @@ Matrix createRandomMatrix(uint64_t rows, uint64_t cols) {
   return random_;
 }
 
+// for sigmoid and tanh activations
+Matrix createXavierMatrix(uint64_t rows, uint64_t cols, uint64_t fanIn,
+                          uint64_t fanOut) {
+  Matrix random_ = createMatrix(rows, cols);
+  float limit = sqrtf(6.0 / (fanIn + fanOut));
+
+  for (uint64_t i = 0; i < rows * cols; i++) {
+    random_.data[i] = -limit + ((float)rand() / (float)RAND_MAX) * (2 * limit);
+  }
+  return random_;
+}
+
+// for reluuuuu and linear (maybe)
+Matrix createHeMatrix(uint64_t rows, uint64_t cols, uint64_t fanIn) {
+  Matrix random_ = createMatrix(rows, cols);
+  float limit = sqrtf(6.0 / (fanIn));
+
+  for (uint64_t i = 0; i < rows * cols; i++) {
+    random_.data[i] = -limit + ((float)rand() / (float)RAND_MAX) * (2 * limit);
+  }
+  return random_;
+}
+
 void copyMatrix(Matrix original, Matrix *target) {
   if (original.rows != target->rows || original.cols != target->cols) {
     fprintf(stderr,
@@ -154,10 +177,11 @@ void printMatrix(Matrix A) {
 
 void transposeMatrix(Matrix A, Matrix *result) {
   if (A.rows != result->cols || A.cols != result->rows) {
-    fprintf(stderr,
-            "Error: result matrix is of wrong size. A = (%" PRIu64 " x %" PRIu64
-            "), result* = (%" PRIu64 " x %" PRIu64 ")",
-            A.rows, A.cols, result->rows, result->cols);
+    fprintf(
+        stderr,
+        "Error: Cannot transpose, result matrix is of wrong size. A = (%" PRIu64
+        " x %" PRIu64 "), result* = (%" PRIu64 " x %" PRIu64 ")",
+        A.rows, A.cols, result->rows, result->cols);
     exit(1);
   }
 
@@ -206,14 +230,14 @@ void softmax(Matrix *A) {
 }
 
 void getHighestIndexes(Matrix outputs, Matrix *result) {
-  if (outputs.cols != result->rows) {
-    fprintf(stderr,
-            "Error: Unable to get highest indices with wrong result matrix "
-            "size: Outputs = (%" PRIu64 " x %" PRIu64 "), result* = (%" PRIu64
-            " x %" PRIu64 ")",
-            outputs.rows, outputs.cols, result->rows, result->cols);
-    exit(1);
-  }
+  // if (outputs.cols != result->rows) {
+  //   fprintf(stderr,
+  //           "Error: Unable to get highest indices with wrong result matrix "
+  //           "size: Outputs = (%" PRIu64 " x %" PRIu64 "), result* = (%"
+  //           PRIu64 " x %" PRIu64 ")", outputs.rows, outputs.cols,
+  //           result->rows, result->cols);
+  //   exit(1);
+  // }
 
   for (uint64_t i = 0; i < outputs.rows; i++) {
     uint64_t max_index = 0;
