@@ -33,7 +33,7 @@ Matrix load_mnist_dataset(const char *path, uint64_t *noImages, uint32_t size) {
   }
 
   Matrix images = createMatrix(size, rows * cols);
-  uint8_t *buffer = (uint8_t *)malloc(rows * size * sizeof(uint8_t));
+  uint8_t *buffer = (uint8_t *)malloc(rows * cols * sizeof(uint8_t));
   if (!buffer) {
     fprintf(stderr, "Error: Failed to allocate image buffer of size %" PRIu8,
             size);

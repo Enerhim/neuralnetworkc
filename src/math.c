@@ -31,7 +31,7 @@ void copyMatrix(Matrix original, Matrix *target) {
             "Error: Unable to copy to target of different size: (%" PRIu64
             " x %" PRIu64 ") and (%" PRIu64 " x %" PRIu64 ")\n",
             original.rows, original.cols, target->rows, target->cols);
-    return;
+    exit(1);
   }
 
   for (uint64_t i = 0; i < original.cols * original.rows; i++) {
@@ -51,7 +51,7 @@ void addMatrices(Matrix A, Matrix B, Matrix *result) {
             "Error: Unable to add matrices of different sizes: (%" PRIu64
             " x %" PRIu64 ") and (%" PRIu64 " x %" PRIu64 ")\n",
             A.rows, A.cols, B.rows, B.cols);
-    return;
+    exit(1);
   }
 
   for (uint64_t i = 0; i < A.cols * A.rows; i++) {
@@ -65,7 +65,7 @@ void subtractMatrices(Matrix A, Matrix B, Matrix *result) {
             "Error: Unable to subtract matrices of different sizes: (%" PRIu64
             " x %" PRIu64 ") and (%" PRIu64 " x %" PRIu64 ")\n",
             A.rows, A.cols, B.rows, B.cols);
-    return;
+    exit(1);
   }
 
   for (uint64_t i = 0; i < A.cols * A.rows; i++) {
@@ -80,7 +80,7 @@ void mulMatrices(Matrix A, Matrix B, Matrix *result) {
         "Error: Unable to multiply matrices of incompatible sizes: (%" PRIu64
         " x %" PRIu64 ") and (%" PRIu64 " x %" PRIu64 ")\n",
         A.rows, A.cols, B.rows, B.cols);
-    return;
+    exit(1);
   }
 
   if (result->rows != A.rows || result->cols != B.cols) {
@@ -88,7 +88,7 @@ void mulMatrices(Matrix A, Matrix B, Matrix *result) {
             "Error: result matrix is of wrong size: (%" PRIu64 " x %" PRIu64
             ")\n",
             result->rows, result->cols);
-    return;
+    exit(1);
   }
 
   for (uint64_t i = 0; i < A.rows; i++) {
@@ -113,7 +113,7 @@ void extendVector(Matrix A, uint64_t n, Matrix *result) {
             "Error: Cannot extend a matrix to a tensor: (%" PRIu64 " x %" PRIu64
             ")",
             A.rows, A.cols);
-    return;
+    exit(1);
   }
 
   if (result->rows != A.rows || result->cols != A.cols * n) {
@@ -121,7 +121,7 @@ void extendVector(Matrix A, uint64_t n, Matrix *result) {
             "Error: result matrix of wrong shape: A = (%" PRIu64 " x %" PRIu64
             "), Result = (%" PRIu64 " x %" PRIu64 ") ",
             A.rows, A.cols, result->rows, result->cols);
-    return;
+    exit(1);
   }
 
   for (uint64_t i = 0; i < A.rows; i++) {
@@ -158,7 +158,7 @@ void transposeMatrix(Matrix A, Matrix *result) {
             "Error: result matrix is of wrong size. A = (%" PRIu64 " x %" PRIu64
             "), result* = (%" PRIu64 " x %" PRIu64 ")",
             A.rows, A.cols, result->rows, result->cols);
-    return;
+    exit(1);
   }
 
   for (uint64_t i = 0; i < A.rows; i++) {
@@ -206,6 +206,15 @@ void softmax(Matrix *A) {
 }
 
 void getHighestIndexes(Matrix outputs, Matrix *result) {
+  if (outputs.cols != result->rows) {
+    fprintf(stderr,
+            "Error: Unable to get highest indices with wrong result matrix "
+            "size: Outputs = (%" PRIu64 " x %" PRIu64 "), result* = (%" PRIu64
+            " x %" PRIu64 ")",
+            outputs.rows, outputs.cols, result->rows, result->cols);
+    exit(1);
+  }
+
   for (uint64_t i = 0; i < outputs.rows; i++) {
     uint64_t max_index = 0;
     float max_value = outputs.data[i * outputs.cols];
@@ -226,7 +235,7 @@ float MSELoss(Matrix y, Matrix y_hat) {
             "Error: Unable to calculate MSE Loss of different sized matrices: "
             "(%" PRIu64 " x %" PRIu64 ") and (%" PRIu64 " x %" PRIu64 ")\n",
             y.rows, y.cols, y_hat.rows, y_hat.cols);
-    return 0;
+    exit(1);
   }
 
   float cost = 0.0;
