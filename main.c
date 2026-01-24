@@ -17,14 +17,13 @@ int main(void) {
 
   NeuralNetwork net = createNetwork(3, units, activations, 784);
 
-  Matrix logits = inferenceNN(&net, X_train);
+  Matrix logits = inferenceNN(&net, X_train, NULL, NULL, false);
   Matrix result = createMatrix(logits.cols, logits.rows);
   transposeMatrix(logits, &result);
 
   Matrix highestIndices = createMatrix(5, 1);
   getHighestIndexes(result, &highestIndices);
 
-  printf("%zu x %zu", net.layers[0].weights.rows, net.layers[0].weights.cols);
   printMatrix(highestIndices);
 
   freeNetwork(&net);
