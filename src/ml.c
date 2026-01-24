@@ -128,9 +128,16 @@ void fitNetwork(NeuralNetwork *network, float alpha, Matrix X_train,
     }
 
     Matrix dZ_prev = createMatrix(A_cache[l - 1].cols, A_cache[l - 1].rows);
-    Matrix W_T = createMatrix(network->layers[l].weights.rows,
-                              network->layers[l].weights.cols);
+    Matrix W_T = createMatrix(network->layers[l].weights.cols,
+                              network->layers[l].weights.rows);
+    transposeMatrix(network->layers[l].weights, &W_T);
+    Matrix dA = createMatrix(W_T.rows, dZ.cols);
+    dA = mulMatrices(W_T, dZ, &dA);
 
+    Matrix Z_T = createMatrix(Z_cache[l - 1].cols, Z_cache[l - 1].rows);
+    transposeMatrix(Z_cache[l - 1], Z_T);
+
+    dZ_prev = hadamandProduct(dA, derivativeActivation());
     freeMatrix(&transpose_A);
   }
 
