@@ -1,5 +1,4 @@
 #include "../include/ml.h"
-#include <stdint.h>
 
 NeuralNetwork createNetwork(uint64_t noLayers, uint64_t *units,
                             ActivationFunction *activations,
@@ -47,7 +46,7 @@ NeuralNetwork createNetwork(uint64_t noLayers, uint64_t *units,
 Matrix inferenceNN(NeuralNetwork *nn, Matrix X, Matrix *A_cache,
                    Matrix *Z_cache, bool cacheZA) {
   Matrix A = createMatrix(X.cols, X.rows);
-  transposeMatrix(X, &A); // Convert to colum major for now
+  transposeMatrix(X, &A); // Convert to colum major for working with weights
 
   for (uint64_t i = 0; i < nn->noLayers; i++) {
     uint64_t m = nn->layers[i].weights.rows, n = A.cols;
@@ -61,8 +60,8 @@ Matrix inferenceNN(NeuralNetwork *nn, Matrix X, Matrix *A_cache,
     addMatrices(dotProduct, extendedBias, &Z);
 
     if (cacheZA) {
-      Z_cache[i] = createMatrix(nn->layers[i].units, 1);
-      copyMatrix(Z, &Z_cache[i]);
+      Z_cache[i] = createMatrix(X.rows, nn->layers[i].units);
+      transposeMatrix(Z, &Z_cache[i]);
     }
 
     nn->layers[i].activation(&Z);
@@ -70,19 +69,75 @@ Matrix inferenceNN(NeuralNetwork *nn, Matrix X, Matrix *A_cache,
     A = Z;
 
     if (cacheZA) {
-      A_cache[i] = createMatrix(nn->layers[i].units, 1);
-      copyMatrix(A, &A_cache[i]);
+      A_cache[i] = createMatrix(X.rows, nn->layers[i].units);
+      transposeMatrix(A, &A_cache[i]);
     }
 
     freeMatrix(&extendedBias);
     freeMatrix(&dotProduct);
   }
 
-  return A;
+  Matrix result = createMatrix(A.cols, A.rows);
+  transposeMatrix(A, &result);
+  freeMatrix(&A);
+  return result;
 }
 
 void fitNetwork(NeuralNetwork *network, float alpha, Matrix X_train,
-                Matrix y_train) {}
+                Matrix y_train) {
+  uint64_t noLayers = network->noLayers;
+  uint64_t m = X_train.rows;
+  uint64_t n_input = X_train.cols;
+
+  Matrix *A_cache = malloc(sizeof(Matrix) * noLayers);
+  Matrix *Z_cache = malloc(sizeof(Matrix) * noLayers);
+
+  Matrix y_hat = inferenceNN(network, X_train, A_cache, Z_cache, true);
+
+  uint64_t n_output = y_hat.cols;
+
+  // Change to y hat rows if not working
+  Matrix oneHotLabels = createMatrix(m, n_output);
+  oneHotEncode(y_train, &oneHotLabels);
+
+  Matrix dZ = createMatrix(n_output, m);
+  transposeMatrix(oneHotLabels, &dZ);
+
+  Matrix *dW = malloc(sizeof(Matrix) * noLayers);
+  Matrix *dB = malloc(sizeof(Matrix) * noLayers);
+
+  for (uint64_t l = noLayers - 1; l > 0; l--) {
+    Matrix transpose_A = createMatrix(A_cache[l].cols, A_cache[l].rows);
+    transposeMatrix(A_cache[l], &transpose_A);
+
+    subtractMatrices(transpose_A, dZ, &dZ);
+    dW[l] = createMatrix(dZ.rows, A_cache[l - 1].cols);
+
+    mulMatrices(dZ, A_cache[l - 1], &dW[l]);
+    scaleMatrix(dW[l], (1.00 / X_train.rows), &dW[l]);
+
+    dB[l] = createMatrix(y_hat.cols, 1);
+
+    for (uint64_t m = 0; m < X_train.rows; m++) {
+      Matrix dZ_m = createMatrix(dZ.rows, 1);
+      for (uint64_t i = 0; i < dZ.rows; i++) {
+        dZ_m.data[i] = dZ.data[m * i];
+      }
+      addMatrices(dB[l], dZ_m, &dB[l]);
+      freeMatrix(&dZ_m);
+    }
+
+    Matrix dZ_prev = createMatrix(A_cache[l - 1].cols, A_cache[l - 1].rows);
+    Matrix W_T = createMatrix(network->layers[l].weights.rows,
+                              network->layers[l].weights.cols);
+
+    freeMatrix(&transpose_A);
+  }
+
+  freeMatrix(&dZ);
+  freeMatrix(&oneHotLabels);
+  freeMatrix(&y_hat);
+}
 
 void freeNetwork(NeuralNetwork *network) {
   for (uint64_t i = 0; i < network->noLayers; i++) {

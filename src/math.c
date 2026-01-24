@@ -229,15 +229,26 @@ void softmax(Matrix *A) {
   }
 }
 
+void oneHotEncode(Matrix y, Matrix *result) {}
+
 void getHighestIndexes(Matrix outputs, Matrix *result) {
-  // if (outputs.cols != result->rows) {
-  //   fprintf(stderr,
-  //           "Error: Unable to get highest indices with wrong result matrix "
-  //           "size: Outputs = (%" PRIu64 " x %" PRIu64 "), result* = (%"
-  //           PRIu64 " x %" PRIu64 ")", outputs.rows, outputs.cols,
-  //           result->rows, result->cols);
-  //   exit(1);
-  // }
+  if (outputs.rows != result->rows) {
+    fprintf(stderr,
+            "Error: Unable to get highest indices with wrong result matrix "
+            "size: Outputs = (%" PRIu64 " x %" PRIu64 "), result* = (%" PRIu64
+            " x %" PRIu64 ")",
+            outputs.rows, outputs.cols, result->rows, result->cols);
+    exit(1);
+  }
+
+  if (result->cols != 1) {
+    fprintf(
+        stderr,
+        "Error: List of highest indexes must have cols = 1: result* = (%" PRIu64
+        " x %" PRIu64 ")",
+        result->rows, result->cols);
+    exit(1);
+  }
 
   for (uint64_t i = 0; i < outputs.rows; i++) {
     uint64_t max_index = 0;
@@ -255,10 +266,11 @@ void getHighestIndexes(Matrix outputs, Matrix *result) {
 
 float MSELoss(Matrix y, Matrix y_hat) {
   if (y.rows != y_hat.rows || y.cols != y_hat.cols) {
-    fprintf(stderr,
-            "Error: Unable to calculate MSE Loss of different sized matrices: "
-            "(%" PRIu64 " x %" PRIu64 ") and (%" PRIu64 " x %" PRIu64 ")\n",
-            y.rows, y.cols, y_hat.rows, y_hat.cols);
+    fprintf(
+        stderr,
+        "Error: Unable to calculate MSE Loss between different sized matrices: "
+        "(%" PRIu64 " x %" PRIu64 ") and (%" PRIu64 " x %" PRIu64 ")\n",
+        y.rows, y.cols, y_hat.rows, y_hat.cols);
     exit(1);
   }
 

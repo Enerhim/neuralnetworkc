@@ -43,5 +43,6 @@ void sigmoid(Matrix *A);
 void linear(Matrix *A);
 void softmax(Matrix *A);
 
+void oneHotEncode(Matrix y, Matrix *result);
 void getHighestIndexes(Matrix outputs, Matrix *result);
 float MSELoss(Matrix y, Matrix y_hat);
