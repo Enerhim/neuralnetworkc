@@ -99,8 +99,7 @@ void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
     Matrix *A_cache = malloc(sizeof(Matrix) * noLayers);
     Matrix *Z_cache = malloc(sizeof(Matrix) * noLayers);
 
-    inferenceNN(network, X_train, A_cache, Z_cache, true);
-
+    Matrix y_hat = inferenceNN(network, X_train, A_cache, Z_cache, true);
     Matrix *delta = malloc(sizeof(Matrix) * noLayers);
 
     // Y_train must be one hot
@@ -168,14 +167,19 @@ void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
 
       freeMatrix(&dW[l]);
       freeMatrix(&dB[l]);
+      freeMatrix(&delta[l]);
       freeMatrix(&A_cache[l]);
       freeMatrix(&Z_cache[l]);
     }
+
+    float cost = crossEntropyLoss(y_train, y_hat);
+    printf("Epoch: %" PRIu64 " | Cost: %f", k, cost);
 
     free(A_cache);
     free(Z_cache);
     free(dW);
     free(dB);
+    free(delta);
   }
 }
 

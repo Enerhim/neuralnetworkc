@@ -49,6 +49,7 @@ void softmax(Matrix *A);
 
 void getHighestIndexes(Matrix outputs, Matrix *result);
 float MSELoss(Matrix y, Matrix y_hat);
+float crossEntropyLoss(Matrix y, Matrix y_hat);
 
 void derivativeRelu(Matrix *A);
 void derivativeLinear(Matrix *A);

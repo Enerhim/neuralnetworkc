@@ -296,6 +296,14 @@ void softmax(Matrix *A) {
   }
 }
 
+void logMatrix(Matrix *A) {
+  for (uint64_t i = 0; i < A->rows; i++) {
+    for (uint64_t j = 0; j < A->cols; j++) {
+      A->data[i * A->cols + j] = log(A->data[i * A->cols + j]);
+    }
+  }
+}
+
 void getHighestIndexes(Matrix outputs, Matrix *result) {
   if (outputs.rows != result->rows) {
     fprintf(stderr,
@@ -348,6 +356,22 @@ float MSELoss(Matrix y, Matrix y_hat) {
   cost /= (float)y.rows;
 
   return cost;
+}
+
+float crossEntropyLoss(Matrix y, Matrix y_hat) {
+  float loss = 0.0;
+  uint64_t examples = y.rows;
+  uint64_t outputs = y.cols;
+
+  for (uint64_t i = 0; i < examples; i++) {
+    for (uint64_t k = 0; k < outputs; k++) {
+      y.data[k * y.cols + i] -=
+          y.data[k * y.cols + i] * log(y.data[k * y.cols + i] + 1e-9f);
+    }
+  }
+
+  loss /= examples;
+  return loss;
 }
 
 void derivativeRelu(Matrix *A) {
