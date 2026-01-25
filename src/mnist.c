@@ -91,3 +91,17 @@ Matrix load_mnist_labels(const char *path, uint64_t *out_count, uint32_t size) {
   *out_count = count_;
   return labels;
 }
+
+Matrix mnist_hot_encode(Matrix y) {
+  Matrix result = createMatrix(y.rows, 10);
+  fillMatrix(&result, 0.0);
+
+  for (uint64_t i = 0; i < result.rows; i++) {
+    for (uint64_t j = 0; j < result.cols; j++) {
+      if (j == y.data[i])
+        result.data[i * result.cols + j] = 1.0;
+    }
+  }
+
+  return result;
+}

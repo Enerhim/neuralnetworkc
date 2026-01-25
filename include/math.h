@@ -31,10 +31,14 @@ void subtractMatrices(Matrix A, Matrix B, Matrix *result);
 void mulMatrices(Matrix A, Matrix B, Matrix *result);
 void scaleMatrix(Matrix A, float scalar, Matrix *result);
 void extendVector(Matrix A, uint64_t n, Matrix *result);
+void hadamardProduct(Matrix A, Matrix B, Matrix *result);
 
 void freeMatrix(Matrix *A);
 
 void printMatrix(Matrix A);
+void printShape(Matrix A);
+Matrix getRow(Matrix A, uint64_t row_index);
+Matrix getColumn(Matrix A, uint64_t col_index);
 
 void transposeMatrix(Matrix A, Matrix *result);
 
@@ -43,6 +47,12 @@ void sigmoid(Matrix *A);
 void linear(Matrix *A);
 void softmax(Matrix *A);
 
-void oneHotEncode(Matrix y, Matrix *result);
 void getHighestIndexes(Matrix outputs, Matrix *result);
 float MSELoss(Matrix y, Matrix y_hat);
+
+void derivativeRelu(Matrix *A);
+void derivativeLinear(Matrix *A);
+void derivativeSigmoid(Matrix *A);
+void derivativeSoftmax(Matrix *A);
+
+void ActivationDerivative(ActivationFunction activation, Matrix *A);

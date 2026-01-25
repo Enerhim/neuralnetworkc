@@ -1,4 +1,6 @@
 #include "../include/ml.h"
+#include <stdint.h>
+#include <sys/types.h>
 
 NeuralNetwork createNetwork(uint64_t noLayers, uint64_t *units,
                             ActivationFunction *activations,
@@ -83,67 +85,98 @@ Matrix inferenceNN(NeuralNetwork *nn, Matrix X, Matrix *A_cache,
   return result;
 }
 
-void fitNetwork(NeuralNetwork *network, float alpha, Matrix X_train,
-                Matrix y_train) {
+void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
+                Matrix X_train, Matrix y_train) {
+  uint64_t features = X_train.cols;
+  uint64_t examples = X_train.rows;
   uint64_t noLayers = network->noLayers;
-  uint64_t m = X_train.rows;
-  uint64_t n_input = X_train.cols;
+  uint64_t outputs = network->layers[noLayers].units;
 
-  Matrix *A_cache = malloc(sizeof(Matrix) * noLayers);
-  Matrix *Z_cache = malloc(sizeof(Matrix) * noLayers);
+  ActivationFunction last_activation = network->layers[noLayers - 1].activation;
 
-  Matrix y_hat = inferenceNN(network, X_train, A_cache, Z_cache, true);
+  // Gradient Descent Step
+  for (uint64_t k = 0; k < epochs; k++) {
+    Matrix *A_cache = malloc(sizeof(Matrix) * noLayers);
+    Matrix *Z_cache = malloc(sizeof(Matrix) * noLayers);
 
-  uint64_t n_output = y_hat.cols;
+    inferenceNN(network, X_train, A_cache, Z_cache, true);
 
-  // Change to y hat rows if not working
-  Matrix oneHotLabels = createMatrix(m, n_output);
-  oneHotEncode(y_train, &oneHotLabels);
+    Matrix *delta = malloc(sizeof(Matrix) * noLayers);
 
-  Matrix dZ = createMatrix(n_output, m);
-  transposeMatrix(oneHotLabels, &dZ);
+    // Y_train must be one hot
+    // Calculating delta for last layer softmax + cross-entropy
+    delta[noLayers - 1] =
+        createMatrix(A_cache[noLayers - 1].rows, A_cache[noLayers - 1].cols);
+    subtractMatrices(A_cache[noLayers - 1], y_train, &delta[noLayers - 1]);
 
-  Matrix *dW = malloc(sizeof(Matrix) * noLayers);
-  Matrix *dB = malloc(sizeof(Matrix) * noLayers);
+    for (uint64_t l = noLayers - 2; l >= 0; l--) {
+      Matrix W_T = createMatrix(network->layers[l + 1].weights.cols,
+                                network->layers[l + 1].weights.rows);
+      transposeMatrix(network->layers[l + 1].weights, &W_T);
 
-  for (uint64_t l = noLayers - 1; l > 0; l--) {
-    Matrix transpose_A = createMatrix(A_cache[l].cols, A_cache[l].rows);
-    transposeMatrix(A_cache[l], &transpose_A);
+      delta[l] = createMatrix(W_T.rows, delta[l + 1].cols);
+      mulMatrices(W_T, delta[l + 1], &delta[l]);
 
-    subtractMatrices(transpose_A, dZ, &dZ);
-    dW[l] = createMatrix(dZ.rows, A_cache[l - 1].cols);
+      ActivationDerivative(network->layers[l].activation, &Z_cache[l]);
+      hadamardProduct(delta[l], Z_cache[l], &delta[l]);
 
-    mulMatrices(dZ, A_cache[l - 1], &dW[l]);
-    scaleMatrix(dW[l], (1.00 / X_train.rows), &dW[l]);
-
-    dB[l] = createMatrix(y_hat.cols, 1);
-
-    for (uint64_t m = 0; m < X_train.rows; m++) {
-      Matrix dZ_m = createMatrix(dZ.rows, 1);
-      for (uint64_t i = 0; i < dZ.rows; i++) {
-        dZ_m.data[i] = dZ.data[m * i];
-      }
-      addMatrices(dB[l], dZ_m, &dB[l]);
-      freeMatrix(&dZ_m);
+      freeMatrix(&W_T);
     }
 
-    Matrix dZ_prev = createMatrix(A_cache[l - 1].cols, A_cache[l - 1].rows);
-    Matrix W_T = createMatrix(network->layers[l].weights.cols,
-                              network->layers[l].weights.rows);
-    transposeMatrix(network->layers[l].weights, &W_T);
-    Matrix dA = createMatrix(W_T.rows, dZ.cols);
-    dA = mulMatrices(W_T, dZ, &dA);
+    Matrix *dW = malloc(sizeof(Matrix) * noLayers);
+    Matrix *dB = malloc(sizeof(Matrix) * noLayers);
 
-    Matrix Z_T = createMatrix(Z_cache[l - 1].cols, Z_cache[l - 1].rows);
-    transposeMatrix(Z_cache[l - 1], Z_T);
+    for (uint64_t l = noLayers - 1; l > 0; l--) {
+      Matrix A_T = createMatrix(A_cache[l - 1].cols, A_cache[l - 1].rows);
+      transposeMatrix(A_cache[l - 1], &A_T);
 
-    dZ_prev = hadamandProduct(dA, derivativeActivation());
-    freeMatrix(&transpose_A);
+      dW[l] = createMatrix(delta[l].rows, A_T.cols);
+      mulMatrices(delta[l], A_T, &dW[l]);
+      scaleMatrix(dW[l], 1.00 / examples, &dW[l]);
+
+      dB[l] = createMatrix(delta[l].rows, 1);
+      for (uint64_t p = 0; p < delta[l].cols; p++) {
+        Matrix column = getColumn(delta[l], p);
+        addMatrices(dB[l], column, &dB[l]);
+        freeMatrix(&column);
+      }
+      scaleMatrix(dB[l], 1.00 / examples, &dB[l]);
+
+      freeMatrix(&A_T);
+    }
+    // dW[0] is special since it requires the train data
+    dW[0] = createMatrix(delta[0].rows, X_train.cols);
+    mulMatrices(delta[0], X_train, &dW[0]);
+    scaleMatrix(dW[0], 1.00 / examples, &dW[0]);
+    dB[0] = createMatrix(delta[0].rows, 1);
+    for (uint64_t p = 0; p < delta[0].cols; p++) {
+      Matrix column = getColumn(delta[0], p);
+      addMatrices(dB[0], column, &dB[0]);
+      freeMatrix(&column);
+    }
+    scaleMatrix(dB[0], 1.00 / examples, &dB[0]);
+
+    // GRADIENT DESCEENT YAY
+    for (uint64_t l = 0; l < noLayers - 1; l++) {
+      scaleMatrix(dW[l], alpha, &dW[l]);
+      subtractMatrices(network->layers[l].weights, dW[l],
+                       &network->layers[l].weights);
+
+      scaleMatrix(dB[l], alpha, &dB[l]);
+      subtractMatrices(network->layers[l].bias, dB[l],
+                       &network->layers[l].bias);
+
+      freeMatrix(&dW[l]);
+      freeMatrix(&dB[l]);
+      freeMatrix(&A_cache[l]);
+      freeMatrix(&Z_cache[l]);
+    }
+
+    free(A_cache);
+    free(Z_cache);
+    free(dW);
+    free(dB);
   }
-
-  freeMatrix(&dZ);
-  freeMatrix(&oneHotLabels);
-  freeMatrix(&y_hat);
 }
 
 void freeNetwork(NeuralNetwork *network) {

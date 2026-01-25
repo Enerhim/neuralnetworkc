@@ -124,11 +124,13 @@ void mulMatrices(Matrix A, Matrix B, Matrix *result) {
     }
   }
 }
+
 void scaleMatrix(Matrix A, float scalar, Matrix *result) {
   for (uint64_t i = 0; i < A.rows * A.cols; i++) {
     result->data[i] = scalar * A.data[i];
   }
 }
+
 void extendVector(Matrix A, uint64_t n, Matrix *result) {
   // only rowvise extension for now
   if (A.cols != 1) {
@@ -154,6 +156,31 @@ void extendVector(Matrix A, uint64_t n, Matrix *result) {
   }
 }
 
+void hadamardProduct(Matrix A, Matrix B, Matrix *result) {
+  if (A.rows != B.rows || A.cols != B.cols) {
+    fprintf(stderr,
+            "Error: Input matrices not of same shape: A = (%" PRIu64
+            " x %" PRIu64 "), B = (%" PRIu64 " x %" PRIu64 ") ",
+            A.rows, A.cols, B.rows, B.cols);
+    exit(1);
+  }
+
+  if (A.rows != result->rows || A.cols != result->cols) {
+    fprintf(stderr,
+            "Error: Result matrix not of same shape: A = (%" PRIu64
+            " x %" PRIu64 "), B = (%" PRIu64 " x %" PRIu64 ") ",
+            A.rows, A.cols, result->rows, result->cols);
+    exit(1);
+  }
+
+  for (uint64_t i = 0; i < A.rows; i++) {
+    for (uint64_t j = 0; j < A.cols; j++) {
+      result->data[i * result->cols + j] =
+          A.data[i * A.cols + j] * B.data[i * A.cols + j];
+    }
+  }
+}
+
 void freeMatrix(Matrix *A) {
   free(A->data);
   A->data = NULL;
@@ -173,6 +200,46 @@ void printMatrix(Matrix A) {
   printf("]\n Shape: (%" PRIu64 " x %" PRIu64 "), Total Elements: %" PRIu64
          "\nSize = %zu Bytes",
          A.rows, A.cols, A.rows * A.cols, sizeof(float) * A.rows * A.cols);
+}
+
+void printShape(Matrix A) {
+  printf("Shape of matrix is (%" PRIu64 " x %" PRIu64 ")", A.rows, A.cols);
+}
+
+Matrix getRow(Matrix A, uint64_t row_index) {
+  if (row_index > (A.rows - 1)) {
+    fprintf(stderr,
+            "Error: Index for getting row is out of bounds. A = (%" PRIu64
+            " x %" PRIu64 ") and index = %" PRIu64 "",
+            A.rows, A.cols, row_index);
+    exit(1);
+  }
+
+  Matrix result = createMatrix(1, A.cols);
+
+  for (uint64_t i = 0; i < A.cols; i++) {
+    result.data[i] = A.data[A.cols * row_index + i];
+  }
+
+  return result;
+}
+
+Matrix getColumn(Matrix A, uint64_t column_index) {
+  if (column_index > (A.cols - 1)) {
+    fprintf(stderr,
+            "Error: Index for getting colm is out of bounds. A = (%" PRIu64
+            " x %" PRIu64 ") and index = %" PRIu64 "",
+            A.rows, A.cols, column_index);
+    exit(1);
+  }
+
+  Matrix result = createMatrix(A.rows, 1);
+
+  for (uint64_t i = 0; i < A.rows; i++) {
+    result.data[i] = A.data[i * A.cols + column_index];
+  }
+
+  return result;
 }
 
 void transposeMatrix(Matrix A, Matrix *result) {
@@ -229,8 +296,6 @@ void softmax(Matrix *A) {
   }
 }
 
-void oneHotEncode(Matrix y, Matrix *result) {}
-
 void getHighestIndexes(Matrix outputs, Matrix *result) {
   if (outputs.rows != result->rows) {
     fprintf(stderr,
@@ -283,4 +348,44 @@ float MSELoss(Matrix y, Matrix y_hat) {
   cost /= (float)y.rows;
 
   return cost;
+}
+
+void derivativeRelu(Matrix *A) {
+  for (uint64_t i = 0; i < A->rows; i++) {
+    for (uint64_t j = 0; j < A->cols; j++) {
+      A->data[i * A->cols + j] = A->data[i * A->cols + j] > 0 ? 1.0 : 0.0;
+    }
+  }
+}
+
+void derivativeLinear(Matrix *A) {
+  for (uint64_t i = 0; i < A->rows; i++) {
+    for (uint64_t j = 0; j < A->cols; j++) {
+      A->data[i * A->cols + j] = 1.0;
+    }
+  }
+}
+
+void derivativeSigmoid(Matrix *A) {
+  for (uint64_t i = 0; i < A->rows; i++) {
+    for (uint64_t j = 0; j < A->cols; j++) {
+      A->data[i * A->cols + j] =
+          (1.00 / (1 + exp(-A->data[i * A->cols + j]))) *
+          (1 - ((1.00 / (1 + exp(-A->data[i * A->cols + j])))));
+    }
+  }
+}
+
+void derivativeSoftmax(Matrix *A) {}
+
+void ActivationDerivative(ActivationFunction activation, Matrix *A) {
+  if (activation == relu) {
+    derivativeRelu(A);
+  } else if (activation == linear) {
+    derivativeLinear(A);
+  } else if (activation == sigmoid) {
+    derivativeSigmoid(A);
+  } else if (activation == softmax) {
+    derivativeSoftmax(A);
+  }
 }
