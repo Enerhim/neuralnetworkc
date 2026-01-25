@@ -365,8 +365,13 @@ float crossEntropyLoss(Matrix y, Matrix y_hat) {
 
   for (uint64_t i = 0; i < examples; i++) {
     for (uint64_t k = 0; k < outputs; k++) {
-      y.data[k * y.cols + i] -=
-          y.data[k * y.cols + i] * log(y.data[k * y.cols + i] + 1e-9f);
+      float current_y = y.data[i * y.cols + k];
+
+      if (current_y == 0)
+        continue;
+
+      float current_y_hat = y_hat.data[i * y_hat.cols + k];
+      loss -= current_y * log(current_y_hat + 1e-9f);
     }
   }
 

@@ -107,11 +107,10 @@ void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
     subtractMatrices(A_cache[noLayers - 1], y_train, &delta[noLayers - 1]);
 
     for (int64_t l = noLayers - 2; l >= 0; l--) {
-      uint64_t W_rows = network->layers[l + 1].weights.rows,
-               W_cols = network->layers[l + 1].weights.cols;
+      uint64_t W_cols = network->layers[l + 1].weights.cols;
 
       delta[l] = createMatrix(delta[l + 1].rows, W_cols);
-      mulMatrices(delta[l + 1], network->layers[l].weights, &delta[l]);
+      mulMatrices(delta[l + 1], network->layers[l + 1].weights, &delta[l]);
 
       ActivationDerivative(network->layers[l].activation, &Z_cache[l]);
       hadamardProduct(delta[l], Z_cache[l], &delta[l]);
@@ -158,7 +157,8 @@ void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
     }
 
     float cost = crossEntropyLoss(y_train, y_hat);
-    printf("Epoch: %" PRIu64 " | Cost: %f\n", k, cost);
+    if (k % 50 == 0)
+      printf("Epoch: %" PRIu64 " | Cost: %f\n", k, cost);
 
     freeMatrix(&y_hat);
 
