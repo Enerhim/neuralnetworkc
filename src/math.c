@@ -277,7 +277,7 @@ void linear(Matrix *A) { return; }
 
 void softmax(Matrix *A) {
   for (uint64_t i = 0; i < A->rows; i++) {
-    float max_value = A->data[i * A->cols];
+    float max_value = -INFINITY;
     for (uint64_t j = 0; j < A->cols; j++) {
       if (A->data[i * A->cols + j] > max_value) {
         max_value = A->data[i * A->cols + j];
