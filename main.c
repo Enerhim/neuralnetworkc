@@ -9,16 +9,15 @@ int main(void) {
 
   Matrix X_train = load_mnist_dataset("./data/train-images-idx3-ubyte",
                                       &n_train_images, 100);
-  Matrix y_train = load_mnist_labels("./data/train-labels-idx1-ubyte",
-                                     &n_train_labels, X_train.rows);
+  Matrix y_labels = load_mnist_labels("./data/train-labels-idx1-ubyte",
+                                      &n_train_labels, X_train.rows);
 
   uint64_t units[] = {16, 16, 10};
   ActivationFunction activations[] = {relu, relu, softmax};
 
   NeuralNetwork net = createNetwork(3, units, activations, 784);
+  Matrix y_train = mnist_hot_encode(y_labels);
   fitNetwork(&net, 0.01, 1000, X_train, y_train);
-
-  printShape(X_train);
 
   freeNetwork(&net);
   freeMatrix(&X_train);

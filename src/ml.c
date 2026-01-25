@@ -87,10 +87,8 @@ Matrix inferenceNN(NeuralNetwork *nn, Matrix X, Matrix *A_cache,
 
 void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
                 Matrix X_train, Matrix y_train) {
-  uint64_t features = X_train.cols;
   uint64_t examples = X_train.rows;
   uint64_t noLayers = network->noLayers;
-  uint64_t outputs = network->layers[noLayers].units;
 
   ActivationFunction last_activation = network->layers[noLayers - 1].activation;
 
@@ -108,77 +106,69 @@ void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
         createMatrix(A_cache[noLayers - 1].rows, A_cache[noLayers - 1].cols);
     subtractMatrices(A_cache[noLayers - 1], y_train, &delta[noLayers - 1]);
 
-    for (uint64_t l = noLayers - 2; l >= 0; l--) {
-      Matrix W_T = createMatrix(network->layers[l + 1].weights.cols,
-                                network->layers[l + 1].weights.rows);
-      transposeMatrix(network->layers[l + 1].weights, &W_T);
+    for (int64_t l = noLayers - 2; l >= 0; l--) {
+      uint64_t W_rows = network->layers[l + 1].weights.rows,
+               W_cols = network->layers[l + 1].weights.cols;
 
-      delta[l] = createMatrix(W_T.rows, delta[l + 1].cols);
-      mulMatrices(W_T, delta[l + 1], &delta[l]);
+      delta[l] = createMatrix(delta[l + 1].rows, W_cols);
+      mulMatrices(delta[l + 1], network->layers[l].weights, &delta[l]);
 
       ActivationDerivative(network->layers[l].activation, &Z_cache[l]);
       hadamardProduct(delta[l], Z_cache[l], &delta[l]);
-
-      freeMatrix(&W_T);
     }
 
-    Matrix *dW = malloc(sizeof(Matrix) * noLayers);
-    Matrix *dB = malloc(sizeof(Matrix) * noLayers);
-
-    for (uint64_t l = noLayers - 1; l > 0; l--) {
-      Matrix A_T = createMatrix(A_cache[l - 1].cols, A_cache[l - 1].rows);
-      transposeMatrix(A_cache[l - 1], &A_T);
-
-      dW[l] = createMatrix(delta[l].rows, A_T.cols);
-      mulMatrices(delta[l], A_T, &dW[l]);
-      scaleMatrix(dW[l], 1.00 / examples, &dW[l]);
-
-      dB[l] = createMatrix(delta[l].rows, 1);
-      for (uint64_t p = 0; p < delta[l].cols; p++) {
-        Matrix column = getColumn(delta[l], p);
-        addMatrices(dB[l], column, &dB[l]);
-        freeMatrix(&column);
+    for (uint64_t l = 0; l < noLayers; l++) {
+      Matrix A_prev;
+      if (l == 0) {
+        A_prev = X_train;
+      } else {
+        A_prev = A_cache[l - 1];
       }
-      scaleMatrix(dB[l], 1.00 / examples, &dB[l]);
 
-      freeMatrix(&A_T);
-    }
-    // dW[0] is special since it requires the train data
-    dW[0] = createMatrix(delta[0].rows, X_train.cols);
-    mulMatrices(delta[0], X_train, &dW[0]);
-    scaleMatrix(dW[0], 1.00 / examples, &dW[0]);
-    dB[0] = createMatrix(delta[0].rows, 1);
-    for (uint64_t p = 0; p < delta[0].cols; p++) {
-      Matrix column = getColumn(delta[0], p);
-      addMatrices(dB[0], column, &dB[0]);
-      freeMatrix(&column);
-    }
-    scaleMatrix(dB[0], 1.00 / examples, &dB[0]);
+      Matrix delta_T = createMatrix(delta[l].cols, delta[l].rows);
+      transposeMatrix(delta[l], &delta_T);
 
-    // GRADIENT DESCEENT YAY
-    for (uint64_t l = 0; l < noLayers - 1; l++) {
-      scaleMatrix(dW[l], alpha, &dW[l]);
-      subtractMatrices(network->layers[l].weights, dW[l],
+      Matrix dW = createMatrix(delta_T.rows, A_prev.cols);
+      mulMatrices(delta_T, A_prev, &dW);
+      scaleMatrix(dW, 1.00 / examples, &dW);
+
+      Matrix dB = createMatrix(delta[l].cols, 1);
+      fillMatrix(&dB, 0.00);
+
+      for (uint64_t i = 0; i < delta[l].cols; i++) {
+        float sum = 0.0;
+        for (uint64_t j = 0; j < delta[l].rows; j++) {
+          sum += delta[l].data[j * delta[l].cols + i];
+        }
+        dB.data[i] = sum;
+      }
+
+      scaleMatrix(dB, 1.0 / examples, &dB);
+
+      scaleMatrix(dW, alpha, &dW);
+      subtractMatrices(network->layers[l].weights, dW,
                        &network->layers[l].weights);
 
-      scaleMatrix(dB[l], alpha, &dB[l]);
-      subtractMatrices(network->layers[l].bias, dB[l],
-                       &network->layers[l].bias);
+      scaleMatrix(dB, alpha, &dB);
+      subtractMatrices(network->layers[l].bias, dB, &network->layers[l].bias);
 
-      freeMatrix(&dW[l]);
-      freeMatrix(&dB[l]);
+      freeMatrix(&dW);
+      freeMatrix(&dB);
+      freeMatrix(&delta_T);
+    }
+
+    float cost = crossEntropyLoss(y_train, y_hat);
+    printf("Epoch: %" PRIu64 " | Cost: %f\n", k, cost);
+
+    freeMatrix(&y_hat);
+
+    for (uint64_t l = 0; l < noLayers; l++) {
       freeMatrix(&delta[l]);
       freeMatrix(&A_cache[l]);
       freeMatrix(&Z_cache[l]);
     }
-
-    float cost = crossEntropyLoss(y_train, y_hat);
-    printf("Epoch: %" PRIu64 " | Cost: %f", k, cost);
-
     free(A_cache);
     free(Z_cache);
-    free(dW);
-    free(dB);
     free(delta);
   }
 }
