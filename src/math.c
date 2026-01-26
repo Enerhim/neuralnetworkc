@@ -1,5 +1,7 @@
 #include "../include/math.h"
 
+// Matrix Creation
+
 Matrix createMatrix(uint64_t rows, uint64_t cols) {
   Matrix mat;
   mat.cols = cols;
@@ -61,6 +63,8 @@ void copyMatrix(Matrix original, Matrix *target) {
     target->data[i] = original.data[i];
   }
 }
+
+// Matrix Ops
 
 void fillMatrix(Matrix *A, float fill_val) {
   for (uint64_t i = 0; i < A->cols * A->rows; i++) {
@@ -132,7 +136,7 @@ void scaleMatrix(Matrix A, float scalar, Matrix *result) {
 }
 
 void extendVector(Matrix A, uint64_t n, Matrix *result) {
-  // only rowvise extension for now
+  // only row wise extension for now
   if (A.cols != 1) {
     fprintf(stderr,
             "Error: Cannot extend a matrix to a tensor: (%" PRIu64 " x %" PRIu64
@@ -179,31 +183,6 @@ void hadamardProduct(Matrix A, Matrix B, Matrix *result) {
           A.data[i * A.cols + j] * B.data[i * A.cols + j];
     }
   }
-}
-
-void freeMatrix(Matrix *A) {
-  free(A->data);
-  A->data = NULL;
-  A->rows = 0;
-  A->cols = 0;
-}
-
-void printMatrix(Matrix A) {
-  printf("[");
-  for (uint64_t i = 0; i < A.rows; i++) {
-    for (uint64_t j = 0; j < A.cols; j++) {
-      printf("%f\t", A.data[i * A.cols + j]);
-    }
-    if (i != A.rows - 1)
-      printf("\n");
-  }
-  printf("]\n Shape: (%" PRIu64 " x %" PRIu64 "), Total Elements: %" PRIu64
-         "\nSize = %zu Bytes",
-         A.rows, A.cols, A.rows * A.cols, sizeof(float) * A.rows * A.cols);
-}
-
-void printShape(Matrix A) {
-  printf("Shape of matrix is (%" PRIu64 " x %" PRIu64 ")", A.rows, A.cols);
 }
 
 Matrix getRow(Matrix A, uint64_t row_index) {
@@ -259,6 +238,33 @@ void transposeMatrix(Matrix A, Matrix *result) {
   }
 }
 
+void freeMatrix(Matrix *A) {
+  free(A->data);
+  A->data = NULL;
+  A->rows = 0;
+  A->cols = 0;
+}
+
+// Debug
+
+void printMatrix(Matrix A) {
+  printf("[");
+  for (uint64_t i = 0; i < A.rows; i++) {
+    for (uint64_t j = 0; j < A.cols; j++) {
+      printf("%f\t", A.data[i * A.cols + j]);
+    }
+    if (i != A.rows - 1)
+      printf("\n");
+  }
+  printf("]\n Shape: (%" PRIu64 " x %" PRIu64 "), Total Elements: %" PRIu64
+         "\nSize = %zu Bytes",
+         A.rows, A.cols, A.rows * A.cols, sizeof(float) * A.rows * A.cols);
+}
+
+void printShape(Matrix A) {
+  printf("Shape of matrix is (%" PRIu64 " x %" PRIu64 ")", A.rows, A.cols);
+}
+
 // Activations
 
 void relu(Matrix *A) {
@@ -296,44 +302,50 @@ void softmax(Matrix *A) {
   }
 }
 
-void logMatrix(Matrix *A) {
-  for (uint64_t i = 0; i < A->rows; i++) {
-    for (uint64_t j = 0; j < A->cols; j++) {
-      A->data[i * A->cols + j] = log(A->data[i * A->cols + j]);
-    }
-  }
-}
+// void logMatrix(Matrix *A) {
+//   for (uint64_t i = 0; i < A->rows; i++) {
+//     for (uint64_t j = 0; j < A->cols; j++) {
+//       A->data[i * A->cols + j] = log(A->data[i * A->cols + j]);
+//     }
+//   }
+// }
 
-void getHighestIndexes(Matrix outputs, Matrix *result) {
-  if (outputs.rows != result->rows) {
+void activationDerivative(ActivationFunction activation, Matrix Z,
+                          Matrix *result) {
+  if (Z.rows != result->rows || Z.cols != result->cols) {
     fprintf(stderr,
-            "Error: Unable to get highest indices with wrong result matrix "
-            "size: Outputs = (%" PRIu64 " x %" PRIu64 "), result* = (%" PRIu64
+            "Error: Cannot calculate activation derivaive, result matrix is of "
+            "wrong size. Z = (%" PRIu64 " x %" PRIu64 "), result* = (%" PRIu64
             " x %" PRIu64 ")",
-            outputs.rows, outputs.cols, result->rows, result->cols);
+            Z.rows, Z.cols, result->rows, result->cols);
     exit(1);
   }
 
-  if (result->cols != 1) {
-    fprintf(
-        stderr,
-        "Error: List of highest indexes must have cols = 1: result* = (%" PRIu64
-        " x %" PRIu64 ")",
-        result->rows, result->cols);
-    exit(1);
-  }
-
-  for (uint64_t i = 0; i < outputs.rows; i++) {
-    uint64_t max_index = 0;
-    float max_value = outputs.data[i * outputs.cols];
-
-    for (uint64_t j = 0; j < outputs.cols; j++) {
-      if (outputs.data[i * outputs.cols + j] > max_value) {
-        max_index = j;
-        max_value = outputs.data[i * outputs.cols + j];
+  if (activation == relu) {
+    for (uint64_t i = 0; i < Z.rows; i++) {
+      for (uint64_t j = 0; j < Z.cols; j++) {
+        result->data[i * result->cols + j] =
+            Z.data[i * Z.cols + j] > 0 ? 1.0 : 0.0;
       }
     }
-    result->data[i] = max_index;
+  } else if (activation == linear) {
+    for (uint64_t i = 0; i < Z.rows; i++) {
+      for (uint64_t j = 0; j < Z.cols; j++) {
+        result->data[i * result->cols + j] = 1.0;
+      }
+    }
+
+  } else if (activation == sigmoid) {
+    for (uint64_t i = 0; i < Z.rows; i++) {
+      for (uint64_t j = 0; j < Z.cols; j++) {
+        result->data[i * result->cols + j] =
+            (1.00 / (1 + exp(-Z.data[i * Z.cols + j]))) *
+            (1 - ((1.00 / (1 + exp(-Z.data[i * Z.cols + j])))));
+      }
+    }
+  } else {
+    fprintf(stderr, "Error: Invalid activation function..");
+    exit(1);
   }
 }
 
@@ -379,42 +391,37 @@ float crossEntropyLoss(Matrix y, Matrix y_hat) {
   return loss;
 }
 
-void derivativeRelu(Matrix *A) {
-  for (uint64_t i = 0; i < A->rows; i++) {
-    for (uint64_t j = 0; j < A->cols; j++) {
-      A->data[i * A->cols + j] = A->data[i * A->cols + j] > 0 ? 1.0 : 0.0;
-    }
+// Helper
+
+void getHighestIndexes(Matrix outputs, Matrix *result) {
+  if (outputs.rows != result->rows) {
+    fprintf(stderr,
+            "Error: Unable to get highest indices with wrong result matrix "
+            "size: Outputs = (%" PRIu64 " x %" PRIu64 "), result* = (%" PRIu64
+            " x %" PRIu64 ")",
+            outputs.rows, outputs.cols, result->rows, result->cols);
+    exit(1);
   }
-}
 
-void derivativeLinear(Matrix *A) {
-  for (uint64_t i = 0; i < A->rows; i++) {
-    for (uint64_t j = 0; j < A->cols; j++) {
-      A->data[i * A->cols + j] = 1.0;
-    }
+  if (result->cols != 1) {
+    fprintf(
+        stderr,
+        "Error: List of highest indexes must have cols = 1: result* = (%" PRIu64
+        " x %" PRIu64 ")",
+        result->rows, result->cols);
+    exit(1);
   }
-}
 
-void derivativeSigmoid(Matrix *A) {
-  for (uint64_t i = 0; i < A->rows; i++) {
-    for (uint64_t j = 0; j < A->cols; j++) {
-      A->data[i * A->cols + j] =
-          (1.00 / (1 + exp(-A->data[i * A->cols + j]))) *
-          (1 - ((1.00 / (1 + exp(-A->data[i * A->cols + j])))));
+  for (uint64_t i = 0; i < outputs.rows; i++) {
+    uint64_t max_index = 0;
+    float max_value = outputs.data[i * outputs.cols];
+
+    for (uint64_t j = 0; j < outputs.cols; j++) {
+      if (outputs.data[i * outputs.cols + j] > max_value) {
+        max_index = j;
+        max_value = outputs.data[i * outputs.cols + j];
+      }
     }
-  }
-}
-
-void derivativeSoftmax(Matrix *A) {}
-
-void ActivationDerivative(ActivationFunction activation, Matrix *A) {
-  if (activation == relu) {
-    derivativeRelu(A);
-  } else if (activation == linear) {
-    derivativeLinear(A);
-  } else if (activation == sigmoid) {
-    derivativeSigmoid(A);
-  } else if (activation == softmax) {
-    derivativeSoftmax(A);
+    result->data[i] = max_index;
   }
 }

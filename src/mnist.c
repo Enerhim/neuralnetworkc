@@ -105,3 +105,19 @@ Matrix mnist_hot_encode(Matrix y) {
 
   return result;
 }
+
+float calculate_mnist_accuracy(Matrix y_hat, Matrix y_labels) {
+  Matrix highestIndices = createMatrix(y_hat.rows, 1);
+  getHighestIndexes(y_hat, &highestIndices);
+
+  uint64_t total = 0;
+  uint64_t correct = 0;
+
+  for (uint64_t i = 0; i < highestIndices.rows; i++) {
+    total += 1;
+    if (y_hat.data[i] == y_labels.data[i])
+      correct += 1;
+  }
+
+  return (float)correct / total;
+}

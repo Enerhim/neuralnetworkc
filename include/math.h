@@ -16,7 +16,9 @@ typedef struct {
 } Matrix;
 
 typedef void (*ActivationFunction)(Matrix *A);
+typedef float (*LossFunction)(Matrix y_hat, Matrix y);
 
+// Matrix Creation
 Matrix createMatrix(uint64_t rows, uint64_t cols);
 Matrix createRandomMatrix(uint64_t rows, uint64_t cols);
 Matrix createXavierMatrix(uint64_t rows, uint64_t cols, uint64_t fanIn,
@@ -24,36 +26,38 @@ Matrix createXavierMatrix(uint64_t rows, uint64_t cols, uint64_t fanIn,
 Matrix createHeMatrix(uint64_t rows, uint64_t cols, uint64_t fanIn);
 void copyMatrix(Matrix original, Matrix *target);
 
+// Matrix Ops
 void fillMatrix(Matrix *A, float fill_val);
-
 void addMatrices(Matrix A, Matrix B, Matrix *result);
 void subtractMatrices(Matrix A, Matrix B, Matrix *result);
 void mulMatrices(Matrix A, Matrix B, Matrix *result);
 void scaleMatrix(Matrix A, float scalar, Matrix *result);
 void extendVector(Matrix A, uint64_t n, Matrix *result);
 void hadamardProduct(Matrix A, Matrix B, Matrix *result);
+Matrix getRow(Matrix A, uint64_t row_index);
+Matrix getColumn(Matrix A, uint64_t col_index);
+void transposeMatrix(Matrix A, Matrix *result);
 
 void freeMatrix(Matrix *A);
 
+// Debug
 void printMatrix(Matrix A);
 void printShape(Matrix A);
-Matrix getRow(Matrix A, uint64_t row_index);
-Matrix getColumn(Matrix A, uint64_t col_index);
 
-void transposeMatrix(Matrix A, Matrix *result);
+// Matrix Functions
 
 void relu(Matrix *A);
 void sigmoid(Matrix *A);
 void linear(Matrix *A);
 void softmax(Matrix *A);
+void logMatrix(Matrix *A);
 
-void getHighestIndexes(Matrix outputs, Matrix *result);
+void activationDerivative(ActivationFunction activation, Matrix Z,
+                          Matrix *result);
+// Loss Function
+
 float MSELoss(Matrix y, Matrix y_hat);
 float crossEntropyLoss(Matrix y, Matrix y_hat);
 
-void derivativeRelu(Matrix *A);
-void derivativeLinear(Matrix *A);
-void derivativeSigmoid(Matrix *A);
-void derivativeSoftmax(Matrix *A);
-
-void ActivationDerivative(ActivationFunction activation, Matrix *A);
+// Helper
+void getHighestIndexes(Matrix outputs, Matrix *result);

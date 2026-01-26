@@ -11,11 +11,12 @@ typedef struct {
 typedef struct {
   Layer *layers;
   uint64_t noLayers;
+  LossFunction loss;
 } NeuralNetwork;
 
 NeuralNetwork createNetwork(uint64_t noLayers, uint64_t *units,
-                            ActivationFunction *activations,
-                            uint64_t inputSize);
+                            ActivationFunction *activations, uint64_t inputSize,
+                            LossFunction loss);
 Matrix inferenceNN(NeuralNetwork *nn, Matrix input, Matrix *A_cache,
                    Matrix *B_cache, bool cacheZA);
 void freeNetwork(NeuralNetwork *network);

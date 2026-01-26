@@ -1,12 +1,11 @@
 #include "../include/ml.h"
-#include <stdint.h>
-#include <sys/types.h>
 
 NeuralNetwork createNetwork(uint64_t noLayers, uint64_t *units,
-                            ActivationFunction *activations,
-                            uint64_t inputSize) {
+                            ActivationFunction *activations, uint64_t inputSize,
+                            LossFunction loss) {
   NeuralNetwork network;
   network.noLayers = noLayers;
+  network.loss = loss;
   network.layers = malloc(network.noLayers * sizeof(Layer));
   if (!network.layers) {
     fprintf(stderr, "Error: Failed to allocate %" PRIu64 " layers fo NN",
@@ -87,33 +86,62 @@ Matrix inferenceNN(NeuralNetwork *nn, Matrix X, Matrix *A_cache,
 
 void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
                 Matrix X_train, Matrix y_train) {
-  uint64_t examples = X_train.rows;
   uint64_t noLayers = network->noLayers;
-
+  uint64_t examples = X_train.rows;
+  uint64_t features = X_train.cols;
+  uint64_t outputs = y_train.cols;
   ActivationFunction last_activation = network->layers[noLayers - 1].activation;
 
   // Gradient Descent Step
   for (uint64_t k = 0; k < epochs; k++) {
     Matrix *A_cache = malloc(sizeof(Matrix) * noLayers);
     Matrix *Z_cache = malloc(sizeof(Matrix) * noLayers);
-
-    Matrix y_hat = inferenceNN(network, X_train, A_cache, Z_cache, true);
     Matrix *delta = malloc(sizeof(Matrix) * noLayers);
 
-    // Y_train must be one hot
-    // Calculating delta for last layer softmax + cross-entropy
-    delta[noLayers - 1] =
-        createMatrix(A_cache[noLayers - 1].rows, A_cache[noLayers - 1].cols);
-    subtractMatrices(A_cache[noLayers - 1], y_train, &delta[noLayers - 1]);
+    Matrix y_hat = inferenceNN(network, X_train, A_cache, Z_cache, true);
 
+    delta[noLayers - 1] = createMatrix(examples, features);
+
+    // Optimizing for softmax and shit
+    if (last_activation == softmax && network->loss == crossEntropyLoss) {
+
+      subtractMatrices(y_hat, y_train, &delta[noLayers - 1]);
+
+    } else if (last_activation != softmax && network->loss == MSELoss) {
+
+      // This is the derivative of cost J wrt A of last layer
+      Matrix dA = createMatrix(examples, outputs);
+      subtractMatrices(y_hat, y_train, &dA);
+      scaleMatrix(dA, 1.00 / examples, &dA);
+
+      Matrix activation_derivative = createMatrix(dA.rows, dA.cols);
+      // Implement this for the regular activations
+      activationDerivative(last_activation, Z_cache[noLayers - 1],
+                           &activation_derivative);
+
+      hadamardProduct(dA, activation_derivative, &delta[noLayers - 1]);
+
+      freeMatrix(&activation_derivative);
+      freeMatrix(&dA);
+
+    } else {
+      fprintf(stderr, "The loss and last layer activation combination is "
+                      "highly non-optimal.");
+      exit(1);
+    }
+
+    // Calculating intermediate deltas
     for (int64_t l = noLayers - 2; l >= 0; l--) {
-      uint64_t W_cols = network->layers[l + 1].weights.cols;
-
-      delta[l] = createMatrix(delta[l + 1].rows, W_cols);
+      delta[l] = createMatrix(examples, network->layers[l + 1].weights.cols);
       mulMatrices(delta[l + 1], network->layers[l + 1].weights, &delta[l]);
 
-      ActivationDerivative(network->layers[l].activation, &Z_cache[l]);
-      hadamardProduct(delta[l], Z_cache[l], &delta[l]);
+      Matrix activation_derivative = createMatrix(delta[l].rows, delta[l].cols);
+      activationDerivative(network->layers[l].activation, Z_cache[l],
+                           &activation_derivative);
+
+      hadamardProduct(delta[l], activation_derivative, &delta[l]);
+
+      freeMatrix(&activation_derivative);
     }
 
     for (uint64_t l = 0; l < noLayers; l++) {
@@ -131,24 +159,19 @@ void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
       mulMatrices(delta_T, A_prev, &dW);
       scaleMatrix(dW, 1.00 / examples, &dW);
 
-      Matrix dB = createMatrix(delta[l].cols, 1);
+      Matrix dB = createMatrix(delta[l].rows, 1);
       fillMatrix(&dB, 0.00);
-
-      for (uint64_t i = 0; i < delta[l].cols; i++) {
-        float sum = 0.0;
-        for (uint64_t j = 0; j < delta[l].rows; j++) {
-          sum += delta[l].data[j * delta[l].cols + i];
-        }
-        dB.data[i] = sum;
+      for (uint64_t p = 0; p < delta[l].rows; p++) {
+        Matrix row = getRow(delta[l], p);
+        addMatrices(row, dB, &dB);
       }
 
-      scaleMatrix(dB, 1.0 / examples, &dB);
-
+      // Gradient Descent
       scaleMatrix(dW, alpha, &dW);
+      scaleMatrix(dB, alpha, &dB);
+
       subtractMatrices(network->layers[l].weights, dW,
                        &network->layers[l].weights);
-
-      scaleMatrix(dB, alpha, &dB);
       subtractMatrices(network->layers[l].bias, dB, &network->layers[l].bias);
 
       freeMatrix(&dW);
@@ -157,16 +180,16 @@ void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
     }
 
     float cost = crossEntropyLoss(y_train, y_hat);
-    if (k % 50 == 0)
+    if (k % 10 == 0)
       printf("Epoch: %" PRIu64 " | Cost: %f\n", k, cost);
 
-    freeMatrix(&y_hat);
-
     for (uint64_t l = 0; l < noLayers; l++) {
-      freeMatrix(&delta[l]);
       freeMatrix(&A_cache[l]);
       freeMatrix(&Z_cache[l]);
+      freeMatrix(&delta[l]);
     }
+
+    freeMatrix(&y_hat);
     free(A_cache);
     free(Z_cache);
     free(delta);
