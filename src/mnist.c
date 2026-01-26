@@ -115,9 +115,10 @@ float calculate_mnist_accuracy(Matrix y_hat, Matrix y_labels) {
 
   for (uint64_t i = 0; i < highestIndices.rows; i++) {
     total += 1;
-    if (y_hat.data[i] == y_labels.data[i])
+    if (highestIndices.data[i] == y_labels.data[i])
       correct += 1;
   }
 
+  printf("\nTotal Correct %" PRIu64 "\n", correct);
   return (float)correct / total;
 }

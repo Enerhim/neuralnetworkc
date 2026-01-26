@@ -61,3 +61,4 @@ float crossEntropyLoss(Matrix y, Matrix y_hat);
 
 // Helper
 void getHighestIndexes(Matrix outputs, Matrix *result);
+void clipGradientByNorm(Matrix *grad, float max_norm);

@@ -88,7 +88,6 @@ void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
                 Matrix X_train, Matrix y_train) {
   uint64_t noLayers = network->noLayers;
   uint64_t examples = X_train.rows;
-  uint64_t features = X_train.cols;
   uint64_t outputs = y_train.cols;
   ActivationFunction last_activation = network->layers[noLayers - 1].activation;
 
@@ -100,12 +99,13 @@ void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
 
     Matrix y_hat = inferenceNN(network, X_train, A_cache, Z_cache, true);
 
-    delta[noLayers - 1] = createMatrix(examples, features);
+    delta[noLayers - 1] = createMatrix(examples, outputs);
 
     // Optimizing for softmax and shit
     if (last_activation == softmax && network->loss == crossEntropyLoss) {
 
       subtractMatrices(y_hat, y_train, &delta[noLayers - 1]);
+      scaleMatrix(delta[noLayers - 1], 1.00 / examples, &delta[noLayers - 1]);
 
     } else if (last_activation != softmax && network->loss == MSELoss) {
 
@@ -157,14 +157,25 @@ void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
 
       Matrix dW = createMatrix(delta_T.rows, A_prev.cols);
       mulMatrices(delta_T, A_prev, &dW);
-      scaleMatrix(dW, 1.00 / examples, &dW);
+      // scaleMatrix(dW, 1.00 / examples, &dW);
 
-      Matrix dB = createMatrix(delta[l].rows, 1);
+      Matrix dB = createMatrix(delta[l].cols, 1);
       fillMatrix(&dB, 0.00);
       for (uint64_t p = 0; p < delta[l].rows; p++) {
         Matrix row = getRow(delta[l], p);
-        addMatrices(row, dB, &dB);
+        Matrix row_T = createMatrix(row.cols, row.rows);
+
+        transposeMatrix(row, &row_T);
+
+        addMatrices(row_T, dB, &dB);
+
+        freeMatrix(&row);
+        freeMatrix(&row_T);
       }
+      scaleMatrix(dB, 1.00 / examples, &dB);
+
+      clipGradientByNorm(&dW, 5.0);
+      clipGradientByNorm(&dB, 5.0);
 
       // Gradient Descent
       scaleMatrix(dW, alpha, &dW);
@@ -179,7 +190,7 @@ void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
       freeMatrix(&delta_T);
     }
 
-    float cost = crossEntropyLoss(y_train, y_hat);
+    float cost = network->loss(y_train, y_hat);
     if (k % 10 == 0)
       printf("Epoch: %" PRIu64 " | Cost: %f\n", k, cost);
 

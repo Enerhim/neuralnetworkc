@@ -7,11 +7,11 @@ int main(void) {
 
   uint64_t n_train_images, n_test_images, n_train_labels, n_test_labels;
   Matrix X_train = load_mnist_dataset("./data/train-images-idx3-ubyte",
-                                      &n_train_images, 1000);
+                                      &n_train_images, 60000);
   Matrix y_labels = load_mnist_labels("./data/train-labels-idx1-ubyte",
                                       &n_train_labels, X_train.rows);
-  Matrix X_test =
-      load_mnist_dataset("./data/t10k-images-idx3-ubyte", &n_test_images, 50);
+  Matrix X_test = load_mnist_dataset("./data/t10k-images-idx3-ubyte",
+                                     &n_test_images, 10000);
   Matrix y_test_labels = load_mnist_labels("./data/t10k-labels-idx1-ubyte",
                                            &n_test_labels, X_test.rows);
 
@@ -22,7 +22,7 @@ int main(void) {
 
   Matrix y_train = mnist_hot_encode(y_labels);
 
-  fitNetwork(&net, 0.01, 1, X_train, y_train);
+  fitNetwork(&net, 0.001, 5000, X_train, y_train);
 
   Matrix y_hat = inferenceNN(&net, X_test, NULL, NULL, false);
   float accuracy = calculate_mnist_accuracy(y_hat, y_test_labels);

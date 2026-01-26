@@ -42,7 +42,7 @@ Matrix createXavierMatrix(uint64_t rows, uint64_t cols, uint64_t fanIn,
 // for reluuuuu and linear (maybe)
 Matrix createHeMatrix(uint64_t rows, uint64_t cols, uint64_t fanIn) {
   Matrix random_ = createMatrix(rows, cols);
-  float limit = sqrtf(6.0 / (fanIn));
+  float limit = sqrtf(2.0 / (fanIn));
 
   for (uint64_t i = 0; i < rows * cols; i++) {
     random_.data[i] = -limit + ((float)rand() / (float)RAND_MAX) * (2 * limit);
@@ -423,5 +423,20 @@ void getHighestIndexes(Matrix outputs, Matrix *result) {
       }
     }
     result->data[i] = max_index;
+  }
+}
+
+void clipGradientByNorm(Matrix *grad, float max_norm) {
+  // Calculate L2 norm of gradient
+  float norm = 0.0;
+  for (uint64_t i = 0; i < grad->rows * grad->cols; i++) {
+    norm += grad->data[i] * grad->data[i];
+  }
+  norm = sqrtf(norm);
+
+  // Only clip if norm exceeds threshold
+  if (norm > max_norm) {
+    float scale = max_norm / norm;
+    scaleMatrix(*grad, scale, grad);
   }
 }
