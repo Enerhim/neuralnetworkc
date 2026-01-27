@@ -4,6 +4,8 @@ The scope of this neural network is to classify the **MNIST handwritten digits d
 The neural network is implemented using two hidden layers with the ReLu activation and the Softmax activation for final probabilities.
 I have also implemented additional activation functions and attempted to generalize the network to the best of my ability so that it could be used elsewhere. 
 
+With the struct {784, 256, 128, 10} and alpha = 0.1, epochs = 500: The model achieved 93.18% accuracy on 10k test images.
+
 To use this code, clone the repository using <br/>
 `git clone https://github.com/Enerhim/neuralnetworkc/`
 
