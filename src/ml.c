@@ -1,4 +1,5 @@
 #include "../include/ml.h"
+#include "../include/mnist.h"
 
 NeuralNetwork createNetwork(uint64_t noLayers, uint64_t *units,
                             ActivationFunction *activations, uint64_t inputSize,
@@ -85,14 +86,17 @@ Matrix inferenceNN(NeuralNetwork *nn, Matrix X, Matrix *A_cache,
 }
 
 void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
-                Matrix X_train, Matrix y_train, uint64_t lograte) {
+                Matrix X_train, Matrix y_train, Matrix X_test,
+                Matrix y_test_labels, uint64_t lograte) {
   uint64_t noLayers = network->noLayers;
   uint64_t examples = X_train.rows;
   uint64_t outputs = y_train.cols;
   ActivationFunction last_activation = network->layers[noLayers - 1].activation;
-
+  clock_t start, end;
+  double cpu_time_used;
   // Gradient Descent Step
   for (uint64_t k = 0; k < epochs; k++) {
+    start = clock();
     Matrix *A_cache = malloc(sizeof(Matrix) * noLayers);
     Matrix *Z_cache = malloc(sizeof(Matrix) * noLayers);
     Matrix *delta = malloc(sizeof(Matrix) * noLayers);
@@ -105,14 +109,15 @@ void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
     if (last_activation == softmax && network->loss == crossEntropyLoss) {
 
       subtractMatrices(y_hat, y_train, &delta[noLayers - 1]);
-      scaleMatrix(delta[noLayers - 1], 1.00 / examples, &delta[noLayers - 1]);
+      // scaleMatrix(delta[noLayers - 1], 1.00 / examples, &delta[noLayers -
+      // 1]);
 
     } else if (last_activation != softmax && network->loss == MSELoss) {
 
       // This is the derivative of cost J wrt A of last layer
       Matrix dA = createMatrix(examples, outputs);
       subtractMatrices(y_hat, y_train, &dA);
-      scaleMatrix(dA, 1.00 / examples, &dA);
+      // scaleMatrix(dA, 1.00 / examples, &dA);
 
       Matrix activation_derivative = createMatrix(dA.rows, dA.cols);
       // Implement this for the regular activations
@@ -157,7 +162,7 @@ void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
 
       Matrix dW = createMatrix(delta_T.rows, A_prev.cols);
       mulMatrices(delta_T, A_prev, &dW);
-      // scaleMatrix(dW, 1.00 / examples, &dW);
+      scaleMatrix(dW, 1.00 / examples, &dW);
 
       Matrix dB = createMatrix(delta[l].cols, 1);
       fillMatrix(&dB, 0.00);
@@ -170,10 +175,7 @@ void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
         freeMatrix(&row);
         freeMatrix(&row_T);
       }
-      // scaleMatrix(dB, 1.00 / examples, &dB);
-
-      clipGradientByNorm(&dW, 5.0);
-      clipGradientByNorm(&dB, 5.0);
+      scaleMatrix(dB, 1.00 / examples, &dB);
 
       // Gradient Descent
       scaleMatrix(dW, alpha, &dW);
@@ -189,8 +191,15 @@ void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
     }
 
     float cost = network->loss(y_train, y_hat);
-    if (k % lograte == 0)
-      printf("Epoch: %" PRIu64 " | Cost: %f\n", k, cost);
+    end = clock();
+    if (k % lograte == 0) {
+      Matrix val_y = inferenceNN(network, X_test, NULL, NULL, false);
+      float val_accuracy = calculate_mnist_accuracy(val_y, y_test_labels);
+      cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+      printf("Epoch: %" PRIu64 " | Cost: %f | Test Accuracy: %f | Time: %f\n",
+             k, cost, val_accuracy, cpu_time_used);
+      freeMatrix(&val_y);
+    }
 
     for (uint64_t l = 0; l < noLayers; l++) {
       freeMatrix(&A_cache[l]);

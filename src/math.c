@@ -287,22 +287,22 @@ void sigmoid(Matrix *A) {
 void linear(Matrix *A) { return; }
 
 void softmax(Matrix *A) {
-  for (uint64_t i = 0; i < A->rows; i++) {
+  for (uint64_t i = 0; i < A->cols; i++) {
     float max_value = -INFINITY;
-    for (uint64_t j = 0; j < A->cols; j++) {
-      if (A->data[i * A->cols + j] > max_value) {
-        max_value = A->data[i * A->cols + j];
+    for (uint64_t j = 0; j < A->rows; j++) {
+      if (A->data[j * A->cols + i] > max_value) {
+        max_value = A->data[j * A->cols + i];
       }
     }
 
     float sum = 0.0;
-    for (uint64_t j = 0; j < A->cols; j++) {
-      A->data[i * A->cols + j] = expf(A->data[i * A->cols + j] - max_value);
-      sum += A->data[i * A->cols + j];
+    for (uint64_t j = 0; j < A->rows; j++) {
+      A->data[j * A->cols + i] = expf(A->data[j * A->cols + i] - max_value);
+      sum += A->data[j * A->cols + i];
     }
 
-    for (uint64_t j = 0; j < A->cols; j++) {
-      A->data[i * A->cols + j] = A->data[i * A->cols + j] / sum;
+    for (uint64_t j = 0; j < A->rows; j++) {
+      A->data[j * A->cols + i] = A->data[j * A->cols + i] / sum;
     }
   }
 }
@@ -422,17 +422,5 @@ void getHighestIndexes(Matrix outputs, Matrix *result) {
       }
     }
     result->data[i] = max_index;
-  }
-}
-
-void clipGradientByNorm(Matrix *grad, float max_norm) {
-  float norm = 0.0;
-  for (uint64_t i = 0; i < grad->rows * grad->cols; i++) {
-    norm += grad->data[i] * grad->data[i];
-  }
-  norm = sqrtf(norm);
-  if (norm > max_norm) {
-    float scale = max_norm / norm;
-    scaleMatrix(*grad, scale, grad);
   }
 }

@@ -10,19 +10,18 @@ int main(void) {
                                       &n_train_images, 60000);
   Matrix y_labels = load_mnist_labels("./data/train-labels-idx1-ubyte",
                                       &n_train_labels, X_train.rows);
-  Matrix X_test = load_mnist_dataset("./data/t10k-images-idx3-ubyte",
-                                     &n_test_images, 10000);
+  Matrix X_test =
+      load_mnist_dataset("./data/t10k-images-idx3-ubyte", &n_test_images, 1000);
   Matrix y_test_labels = load_mnist_labels("./data/t10k-labels-idx1-ubyte",
                                            &n_test_labels, X_test.rows);
 
-  uint64_t units[] = {196, 32, 10};
+  uint64_t units[] = {256, 128, 10};
   ActivationFunction activations[] = {relu, relu, softmax};
   NeuralNetwork net =
       createNetwork(3, units, activations, 784, crossEntropyLoss);
 
   Matrix y_train = mnist_hot_encode(y_labels);
-
-  fitNetwork(&net, 0.001, 5000, X_train, y_train, 100);
+  fitNetwork(&net, 0.1, 1000, X_train, y_train, X_test, y_test_labels, 20);
 
   Matrix y_hat = inferenceNN(&net, X_test, NULL, NULL, false);
   float accuracy = calculate_mnist_accuracy(y_hat, y_test_labels);
