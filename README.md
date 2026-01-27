@@ -1,10 +1,9 @@
 ### This is a neural network written in pure C.
-The scope of this neural network is to classify the **MNIST handwritten digits dataset** with a good level of accuracy. 
+The scope of this neural network is to classify the **MNIST handwritten digits dataset** with accuracy 90%+ (and also to learn the fundamentals of neural networks well). 
 
-The neural network is implemented using two hidden layers with the ReLu activation and the Softmax activation for final probabilities.
-I have also implemented additional activation functions and attempted to generalize the network to the best of my ability so that it could be used elsewhere. 
+The network is flexible in terms of layers and number of layers. Acivation functions and both CE & MSE loss allow for both classification and regression. Weights can be initialized randomly, with Xavier or with He initialization. Matrices and matrix operations are implemented using flat arrays.
 
-With the struct {784, 256, 128, 10} and alpha = 0.1, epochs = 500: The model achieved 93.18% accuracy on 10k test images.
+With the layers structure: {784, 256, 128, 10}, alpha = 0.1, epochs = 500 over 60k images (full batch gradient descent): The model achieved 93.18% accuracy on 10k test images.
 
 To use this code, clone the repository using <br/>
 `git clone https://github.com/Enerhim/neuralnetworkc/`
@@ -13,4 +12,4 @@ To build: </br>
 `gcc -O3 -march=native -mtune=native -ffast-math -funroll-loops -flto -fomit-frame-pointer -finline-functions -mavx2 -mfma src/math.c src/ml.c src/mnist.c main.c -o build.out -lm && ./build.out` </br>  </br>
 (Makefile coming soon. This was my first proper C project hence my code is not the most optimal. My primary focus was to learn neural networks on a deeper level and gain insight into how they are implemented. I also just wanted to learn about memory management and such in general) 
 
-FURTHER SCOPE: Generalizing as a computational graph and autodifferentiation, testing regression, optimizers, GPU optimization 
+FURTHER SCOPE: Generalizing as a computational graph and autodifferentiation, testing regression, other optimizers, GPU optimization 
