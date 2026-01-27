@@ -3,8 +3,8 @@ The scope of this repo was for me to learn neural networks from the inside and p
 
 The network is flexible in terms of layers and number of layers. Acivation functions and both CE & MSE loss allow for both classification and regression. Weights can be initialized randomly, with Xavier or with He initialization. Matrices and matrix operations are implemented using flat arrays.
 
-For the MNIST Handwritten Digits, the layer structure: {784, 256, 128, 10}, alpha = 0.1, epochs = 500 over 60k images (full batch gradient descent): The model achieved 93.18% accuracy on 10k test images. </br>
-With almost the same structure and hyperparameters as above, the MNIST Fashion Dataset acheived 82.75% accuracy on 10k test images. A larger hidden layer structure will likely lead to much better performance due to higher complexity of images despite them being the same size. 
+For the *MNIST Handwritten Digits*, the layer structure: {784, 256, 128, 10}, alpha = 0.1, epochs = 500 over 60k images (full batch gradient descent): The model achieved 93.18% accuracy on 10k test images. </br>
+With almost the same structure and hyperparameters as above, the *MNIST Fashion Dataset* acheived 82.75% accuracy on 10k test images. A larger hidden layer structure will likely lead to much better performance due to higher complexity of images despite them being the same size. 
 
 To use this code, clone the repository using <br/>
 `git clone https://github.com/Enerhim/neuralnetworkc/`
