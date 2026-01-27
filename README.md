@@ -8,5 +8,6 @@ To use this code, clone the repository using <br/>
 `git clone https://github.com/Enerhim/neuralnetworkc/`
 
 To build: </br>
-`gcc src/math.c src/ml.c src/mnist.c main.c -o build.out -lm -march=native -ffast-math; ./build.out`
-(I will make a MakeFile soon...)
+`gcc src/math.c src/ml.c src/mnist.c main.c -o build.out -lm -march=native -ffast-math; ./build.out` </br>
+(I will make a MakeFile soon...) </br>
+Also forgive me for the non optimal C code, my focus was to get a working neural network written from scratch and not to master systems programming.
