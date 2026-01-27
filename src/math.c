@@ -21,7 +21,8 @@ Matrix createMatrix(uint64_t rows, uint64_t cols) {
 
 Matrix createRandomMatrix(uint64_t rows, uint64_t cols) {
   Matrix random_ = createMatrix(rows, cols);
-  for (uint64_t i = 0; i < rows * cols; i++) {
+  uint64_t size = rows * cols;
+  for (uint64_t i = 0; i < size; i++) {
     random_.data[i] = (float)rand() / (float)RAND_MAX - 0.5;
   }
   return random_;
@@ -33,7 +34,8 @@ Matrix createXavierMatrix(uint64_t rows, uint64_t cols, uint64_t fanIn,
   Matrix random_ = createMatrix(rows, cols);
   float limit = sqrtf(6.0 / (fanIn + fanOut));
 
-  for (uint64_t i = 0; i < rows * cols; i++) {
+  uint64_t size = rows * cols;
+  for (uint64_t i = 0; i < size; i++) {
     random_.data[i] = -limit + ((float)rand() / (float)RAND_MAX) * (2 * limit);
   }
   return random_;
@@ -42,9 +44,11 @@ Matrix createXavierMatrix(uint64_t rows, uint64_t cols, uint64_t fanIn,
 // for reluuuuu and linear (maybe)
 Matrix createHeMatrix(uint64_t rows, uint64_t cols, uint64_t fanIn) {
   Matrix random_ = createMatrix(rows, cols);
+
   float limit = sqrtf(2.0 / (fanIn));
 
-  for (uint64_t i = 0; i < rows * cols; i++) {
+  uint64_t size = rows * cols;
+  for (uint64_t i = 0; i < size; i++) {
     random_.data[i] = -limit + ((float)rand() / (float)RAND_MAX) * (2 * limit);
   }
   return random_;
@@ -59,7 +63,9 @@ void copyMatrix(Matrix original, Matrix *target) {
     exit(1);
   }
 
-  for (uint64_t i = 0; i < original.cols * original.rows; i++) {
+  uint64_t size = original.rows * original.cols;
+
+  for (uint64_t i = 0; i < size; i++) {
     target->data[i] = original.data[i];
   }
 }
@@ -67,7 +73,8 @@ void copyMatrix(Matrix original, Matrix *target) {
 // Matrix Ops
 
 void fillMatrix(Matrix *A, float fill_val) {
-  for (uint64_t i = 0; i < A->cols * A->rows; i++) {
+  uint64_t size = A->cols * A->rows;
+  for (uint64_t i = 0; i < size; i++) {
     A->data[i] = fill_val;
   }
 }
@@ -81,7 +88,9 @@ void addMatrices(Matrix A, Matrix B, Matrix *result) {
     exit(1);
   }
 
-  for (uint64_t i = 0; i < A.cols * A.rows; i++) {
+  uint64_t size = A.cols * A.rows;
+
+  for (uint64_t i = 0; i < size; i++) {
     result->data[i] = A.data[i] + B.data[i];
   }
 }
@@ -95,7 +104,9 @@ void subtractMatrices(Matrix A, Matrix B, Matrix *result) {
     exit(1);
   }
 
-  for (uint64_t i = 0; i < A.cols * A.rows; i++) {
+  uint64_t size = A.cols * A.rows;
+
+  for (uint64_t i = 0; i < size; i++) {
     result->data[i] = A.data[i] - B.data[i];
   }
 }
@@ -119,23 +130,23 @@ void mulMatrices(Matrix A, Matrix B, Matrix *result) {
   }
 
   for (uint64_t i = 0; i < A.rows; i++) {
-    for (uint64_t j = 0; j < B.cols; j++) {
-      float sum = 0.0;
-      for (uint64_t k = 0; k < A.cols; k++) {
-        sum += A.data[i * A.cols + k] * B.data[k * B.cols + j];
+    for (uint64_t k = 0; k < A.cols; k++) {
+      float a = A.data[i * A.cols + k];
+      for (uint64_t j = 0; j < B.cols; j++) {
+        result->data[i * result->cols + j] += a * B.data[k * B.cols + j];
       }
-      result->data[i * result->cols + j] = sum;
     }
   }
 }
 
 void scaleMatrix(Matrix A, float scalar, Matrix *result) {
-  for (uint64_t i = 0; i < A.rows * A.cols; i++) {
+  uint64_t size = A.rows * A.cols;
+  for (uint64_t i = 0; i < size; i++) {
     result->data[i] = scalar * A.data[i];
   }
 }
 
-void extendVector(Matrix A, uint64_t n, Matrix *result) {
+void extendVector(Matrix A, Matrix *result) {
   // only row wise extension for now
   if (A.cols != 1) {
     fprintf(stderr,
@@ -145,7 +156,7 @@ void extendVector(Matrix A, uint64_t n, Matrix *result) {
     exit(1);
   }
 
-  if (result->rows != A.rows || result->cols != A.cols * n) {
+  if (result->rows != A.rows) {
     fprintf(stderr,
             "Error: result matrix of wrong shape: A = (%" PRIu64 " x %" PRIu64
             "), Result = (%" PRIu64 " x %" PRIu64 ") ",
@@ -154,8 +165,8 @@ void extendVector(Matrix A, uint64_t n, Matrix *result) {
   }
 
   for (uint64_t i = 0; i < A.rows; i++) {
-    for (uint64_t j = 0; j < n; j++) {
-      result->data[i * n + j] = A.data[i];
+    for (uint64_t j = 0; j < result->cols; j++) {
+      result->data[i * result->cols + j] = A.data[i];
     }
   }
 }
@@ -185,7 +196,7 @@ void hadamardProduct(Matrix A, Matrix B, Matrix *result) {
   }
 }
 
-Matrix getRow(Matrix A, uint64_t row_index) {
+void getRow(Matrix A, uint64_t row_index, Matrix *result) {
   if (row_index > (A.rows - 1)) {
     fprintf(stderr,
             "Error: Index for getting row is out of bounds. A = (%" PRIu64
@@ -194,16 +205,12 @@ Matrix getRow(Matrix A, uint64_t row_index) {
     exit(1);
   }
 
-  Matrix result = createMatrix(1, A.cols);
-
   for (uint64_t i = 0; i < A.cols; i++) {
-    result.data[i] = A.data[A.cols * row_index + i];
+    result->data[i] = A.data[A.cols * row_index + i];
   }
-
-  return result;
 }
 
-Matrix getColumn(Matrix A, uint64_t column_index) {
+void getColumn(Matrix A, uint64_t column_index, Matrix *result) {
   if (column_index > (A.cols - 1)) {
     fprintf(stderr,
             "Error: Index for getting colm is out of bounds. A = (%" PRIu64
@@ -212,13 +219,9 @@ Matrix getColumn(Matrix A, uint64_t column_index) {
     exit(1);
   }
 
-  Matrix result = createMatrix(A.rows, 1);
-
   for (uint64_t i = 0; i < A.rows; i++) {
-    result.data[i] = A.data[i * A.cols + column_index];
+    result->data[i] = A.data[i * A.cols + column_index];
   }
-
-  return result;
 }
 
 void transposeMatrix(Matrix A, Matrix *result) {
@@ -268,14 +271,16 @@ void printShape(Matrix A) {
 // Activations
 
 void relu(Matrix *A) {
-  for (uint64_t i = 0; i < A->rows * A->cols; i++) {
+  uint64_t size = A->rows * A->cols;
+  for (uint64_t i = 0; i < size; i++) {
     A->data[i] = MAX(A->data[i], 0.0);
   }
 }
 
 void sigmoid(Matrix *A) {
-  for (uint64_t i = 0; i < A->rows * A->cols; i++) {
-    A->data[i] = 1.0 / (1 + exp(-A->data[i]));
+  uint64_t size = A->rows * A->cols;
+  for (uint64_t i = 0; i < size; i++) {
+    A->data[i] = 1.0 / (1 + expf(-A->data[i]));
   }
 }
 
@@ -292,12 +297,12 @@ void softmax(Matrix *A) {
 
     float sum = 0.0;
     for (uint64_t j = 0; j < A->cols; j++) {
-      sum += exp(A->data[i * A->cols + j] - max_value);
+      A->data[j] = expf(A->data[i * A->cols + j] - max_value);
+      sum += A->data[j];
     }
 
     for (uint64_t j = 0; j < A->cols; j++) {
-      A->data[i * A->cols + j] =
-          exp(A->data[i * A->cols + j] - max_value) / sum;
+      A->data[i * A->cols + j] = A->data[j] / sum;
     }
   }
 }
@@ -321,27 +326,18 @@ void activationDerivative(ActivationFunction activation, Matrix Z,
     exit(1);
   }
 
+  uint64_t size = Z.rows * Z.cols;
+
   if (activation == relu) {
-    for (uint64_t i = 0; i < Z.rows; i++) {
-      for (uint64_t j = 0; j < Z.cols; j++) {
-        result->data[i * result->cols + j] =
-            Z.data[i * Z.cols + j] > 0 ? 1.0 : 0.0;
-      }
+    for (uint64_t i = 0; i < size; i++) {
+      result->data[i] = Z.data[i] > 0 ? 1.0 : 0.0;
     }
   } else if (activation == linear) {
-    for (uint64_t i = 0; i < Z.rows; i++) {
-      for (uint64_t j = 0; j < Z.cols; j++) {
-        result->data[i * result->cols + j] = 1.0;
-      }
-    }
-
+    fillMatrix(result, 1.0);
   } else if (activation == sigmoid) {
-    for (uint64_t i = 0; i < Z.rows; i++) {
-      for (uint64_t j = 0; j < Z.cols; j++) {
-        result->data[i * result->cols + j] =
-            (1.00 / (1 + exp(-Z.data[i * Z.cols + j]))) *
-            (1 - ((1.00 / (1 + exp(-Z.data[i * Z.cols + j])))));
-      }
+    for (uint64_t i = 0; i < size; i++) {
+      float s = 1.00 / (1 + expf(-Z.data[i]));
+      result->data[i] = s * (1 - s);
     }
   } else {
     fprintf(stderr, "Error: Invalid activation function..");
@@ -361,8 +357,11 @@ float MSELoss(Matrix y, Matrix y_hat) {
 
   float cost = 0.0;
 
-  for (uint64_t i = 0; i < y.rows * y.cols; i++) {
-    cost += pow(y.data[i] - y_hat.data[i], 2);
+  uint64_t size = y.rows * y.cols;
+
+  for (uint64_t i = 0; i < size; i++) {
+    float d = y.data[i] - y_hat.data[i];
+    cost += d * d;
   }
 
   cost /= (float)y.rows;

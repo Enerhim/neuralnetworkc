@@ -55,7 +55,7 @@ Matrix inferenceNN(NeuralNetwork *nn, Matrix X, Matrix *A_cache,
     mulMatrices(nn->layers[i].weights, A, &dotProduct);
 
     Matrix extendedBias = createMatrix(m, n);
-    extendVector(nn->layers[i].bias, A.cols, &extendedBias);
+    extendVector(nn->layers[i].bias, &extendedBias);
 
     Matrix Z = createMatrix(m, n);
     addMatrices(dotProduct, extendedBias, &Z);
@@ -162,7 +162,8 @@ void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
       Matrix dB = createMatrix(delta[l].cols, 1);
       fillMatrix(&dB, 0.00);
       for (uint64_t p = 0; p < delta[l].rows; p++) {
-        Matrix row = getRow(delta[l], p);
+        Matrix row = createMatrix(1, delta[l].cols);
+        getRow(delta[l], p, &row);
         Matrix row_T = createMatrix(row.cols, row.rows);
 
         transposeMatrix(row, &row_T);
@@ -191,7 +192,7 @@ void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
     }
 
     float cost = network->loss(y_train, y_hat);
-    if (k % 10 == 0)
+    if (k % 50 == 0)
       printf("Epoch: %" PRIu64 " | Cost: %f\n", k, cost);
 
     for (uint64_t l = 0; l < noLayers; l++) {

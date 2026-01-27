@@ -32,10 +32,10 @@ void addMatrices(Matrix A, Matrix B, Matrix *result);
 void subtractMatrices(Matrix A, Matrix B, Matrix *result);
 void mulMatrices(Matrix A, Matrix B, Matrix *result);
 void scaleMatrix(Matrix A, float scalar, Matrix *result);
-void extendVector(Matrix A, uint64_t n, Matrix *result);
+void extendVector(Matrix A, Matrix *result);
 void hadamardProduct(Matrix A, Matrix B, Matrix *result);
-Matrix getRow(Matrix A, uint64_t row_index);
-Matrix getColumn(Matrix A, uint64_t col_index);
+void getRow(Matrix A, uint64_t row_index, Matrix *result);
+void getColumn(Matrix A, uint64_t col_index, Matrix *result);
 void transposeMatrix(Matrix A, Matrix *result);
 
 void freeMatrix(Matrix *A);

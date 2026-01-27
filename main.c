@@ -22,7 +22,7 @@ int main(void) {
 
   Matrix y_train = mnist_hot_encode(y_labels);
 
-  fitNetwork(&net, 0.001, 5000, X_train, y_train);
+  fitNetwork(&net, 0.0005, 1000, X_train, y_train);
 
   Matrix y_hat = inferenceNN(&net, X_test, NULL, NULL, false);
   float accuracy = calculate_mnist_accuracy(y_hat, y_test_labels);
