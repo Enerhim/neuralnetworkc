@@ -426,14 +426,11 @@ void getHighestIndexes(Matrix outputs, Matrix *result) {
 }
 
 void clipGradientByNorm(Matrix *grad, float max_norm) {
-  // Calculate L2 norm of gradient
   float norm = 0.0;
   for (uint64_t i = 0; i < grad->rows * grad->cols; i++) {
     norm += grad->data[i] * grad->data[i];
   }
   norm = sqrtf(norm);
-
-  // Only clip if norm exceeds threshold
   if (norm > max_norm) {
     float scale = max_norm / norm;
     scaleMatrix(*grad, scale, grad);

@@ -85,7 +85,7 @@ Matrix inferenceNN(NeuralNetwork *nn, Matrix X, Matrix *A_cache,
 }
 
 void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
-                Matrix X_train, Matrix y_train) {
+                Matrix X_train, Matrix y_train, uint64_t lograte) {
   uint64_t noLayers = network->noLayers;
   uint64_t examples = X_train.rows;
   uint64_t outputs = y_train.cols;
@@ -170,7 +170,7 @@ void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
         freeMatrix(&row);
         freeMatrix(&row_T);
       }
-      scaleMatrix(dB, 1.00 / examples, &dB);
+      // scaleMatrix(dB, 1.00 / examples, &dB);
 
       clipGradientByNorm(&dW, 5.0);
       clipGradientByNorm(&dB, 5.0);
@@ -189,7 +189,7 @@ void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
     }
 
     float cost = network->loss(y_train, y_hat);
-    if (k % 50 == 0)
+    if (k % lograte == 0)
       printf("Epoch: %" PRIu64 " | Cost: %f\n", k, cost);
 
     for (uint64_t l = 0; l < noLayers; l++) {

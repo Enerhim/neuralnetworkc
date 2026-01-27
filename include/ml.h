@@ -21,4 +21,4 @@ Matrix inferenceNN(NeuralNetwork *nn, Matrix input, Matrix *A_cache,
                    Matrix *B_cache, bool cacheZA);
 void freeNetwork(NeuralNetwork *network);
 void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
-                Matrix X_train, Matrix y_train);
+                Matrix X_train, Matrix y_train, uint64_t lograte);
