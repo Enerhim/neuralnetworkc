@@ -126,7 +126,7 @@ void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
 
     } else {
       fprintf(stderr, "The loss and last layer activation combination is "
-                      "highly non-optimal.");
+                      "highly non-optimal. ");
       exit(1);
     }
 
@@ -165,11 +165,8 @@ void fitNetwork(NeuralNetwork *network, float alpha, uint64_t epochs,
         Matrix row = createMatrix(1, delta[l].cols);
         getRow(delta[l], p, &row);
         Matrix row_T = createMatrix(row.cols, row.rows);
-
         transposeMatrix(row, &row_T);
-
         addMatrices(row_T, dB, &dB);
-
         freeMatrix(&row);
         freeMatrix(&row_T);
       }

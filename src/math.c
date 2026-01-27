@@ -297,12 +297,12 @@ void softmax(Matrix *A) {
 
     float sum = 0.0;
     for (uint64_t j = 0; j < A->cols; j++) {
-      A->data[j] = expf(A->data[i * A->cols + j] - max_value);
-      sum += A->data[j];
+      A->data[i * A->cols + j] = expf(A->data[i * A->cols + j] - max_value);
+      sum += A->data[i * A->cols + j];
     }
 
     for (uint64_t j = 0; j < A->cols; j++) {
-      A->data[i * A->cols + j] = A->data[j] / sum;
+      A->data[i * A->cols + j] = A->data[i * A->cols + j] / sum;
     }
   }
 }
