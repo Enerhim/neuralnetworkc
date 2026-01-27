@@ -224,3 +224,39 @@ void freeNetwork(NeuralNetwork *network) {
   network->layers = NULL;
   network->noLayers = 0;
 }
+
+void saveNetwork(NeuralNetwork *network, const char *filename) {
+  FILE *file = fopen(filename, "wb");
+  if (!file) {
+    fprintf(stderr, "Error: Could not open file %s for saving.\n", filename);
+    return;
+  }
+
+  for (uint64_t i = 0; i < network->noLayers; i++) {
+    Matrix *w = &network->layers[i].weights;
+    Matrix *b = &network->layers[i].bias;
+
+    fwrite(w->data, sizeof(float), w->rows * w->cols, file);
+    fwrite(b->data, sizeof(float), b->rows * b->cols, file);
+  }
+
+  fclose(file);
+}
+
+void loadNetwork(NeuralNetwork *network, const char *filename) {
+  FILE *file = fopen(filename, "rb");
+  if (!file) {
+    fprintf(stderr, "Error: Could not open file %s for loading.\n", filename);
+    return;
+  }
+
+  for (uint64_t i = 0; i < network->noLayers; i++) {
+    Matrix *w = &network->layers[i].weights;
+    Matrix *b = &network->layers[i].bias;
+
+    fread(w->data, sizeof(float), w->rows * w->cols, file);
+    fread(b->data, sizeof(float), b->rows * b->cols, file);
+  }
+
+  fclose(file);
+}

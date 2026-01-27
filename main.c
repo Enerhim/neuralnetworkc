@@ -10,8 +10,8 @@ int main(void) {
                                       &n_train_images, 60000);
   Matrix y_labels = load_mnist_labels("./data/train-labels-idx1-ubyte",
                                       &n_train_labels, X_train.rows);
-  Matrix X_test =
-      load_mnist_dataset("./data/t10k-images-idx3-ubyte", &n_test_images, 1000);
+  Matrix X_test = load_mnist_dataset("./data/t10k-images-idx3-ubyte",
+                                     &n_test_images, 10000);
   Matrix y_test_labels = load_mnist_labels("./data/t10k-labels-idx1-ubyte",
                                            &n_test_labels, X_test.rows);
 
@@ -20,12 +20,16 @@ int main(void) {
   NeuralNetwork net =
       createNetwork(3, units, activations, 784, crossEntropyLoss);
 
+  loadNetwork(&net, "model.gay");
+
   Matrix y_train = mnist_hot_encode(y_labels);
-  fitNetwork(&net, 0.1, 1000, X_train, y_train, X_test, y_test_labels, 20);
+  fitNetwork(&net, 0.1, 500, X_train, y_train, X_test, y_test_labels, 100);
 
   Matrix y_hat = inferenceNN(&net, X_test, NULL, NULL, false);
   float accuracy = calculate_mnist_accuracy(y_hat, y_test_labels);
   printf("Final Accuracy: %f", accuracy);
+
+  saveNetwork(&net, "model.gay");
 
   freeNetwork(&net);
   freeMatrix(&X_train);
