@@ -16,7 +16,7 @@ typedef struct {
 
 NeuralNetwork createNetwork(uint64_t noLayers, uint64_t *units,
                             ActivationFunction *activations, uint64_t inputSize,
-                            LossFunction loss);
+                            LossFunction loss, pcg32_random_t *rng);
 Matrix inferenceNN(NeuralNetwork *nn, Matrix input, Matrix *A_cache,
                    Matrix *B_cache, bool cacheZA);
 void freeNetwork(NeuralNetwork *network);

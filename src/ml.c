@@ -3,7 +3,7 @@
 
 NeuralNetwork createNetwork(uint64_t noLayers, uint64_t *units,
                             ActivationFunction *activations, uint64_t inputSize,
-                            LossFunction loss) {
+                            LossFunction loss, pcg32_random_t *rng) {
   NeuralNetwork network;
   network.noLayers = noLayers;
   network.loss = loss;
@@ -34,9 +34,9 @@ NeuralNetwork createNetwork(uint64_t noLayers, uint64_t *units,
     if (network.layers[i].activation == sigmoid ||
         network.layers[i].activation == softmax ||
         network.layers[i].activation == linear) {
-      network.layers[i].weights = createXavierMatrix(out, in, in, out);
+      network.layers[i].weights = createXavierMatrix(out, in, in, out, rng);
     } else {
-      network.layers[i].weights = createHeMatrix(out, in, in);
+      network.layers[i].weights = createHeMatrix(out, in, in, rng);
     }
     network.layers[i].bias = createMatrix(out, 1);
     fillMatrix(&network.layers[i].bias, 0.0);

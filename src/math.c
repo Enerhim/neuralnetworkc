@@ -19,37 +19,38 @@ Matrix createMatrix(uint64_t rows, uint64_t cols) {
   return mat;
 }
 
-Matrix createRandomMatrix(uint64_t rows, uint64_t cols) {
+Matrix createRandomMatrix(uint64_t rows, uint64_t cols, pcg32_random_t *rng) {
   Matrix random_ = createMatrix(rows, cols);
   uint64_t size = rows * cols;
   for (uint64_t i = 0; i < size; i++) {
-    random_.data[i] = (float)rand() / (float)RAND_MAX - 0.5;
+    random_.data[i] = pcg_float(rng);
   }
   return random_;
 }
 
 // for sigmoid and tanh activations
 Matrix createXavierMatrix(uint64_t rows, uint64_t cols, uint64_t fanIn,
-                          uint64_t fanOut) {
+                          uint64_t fanOut, pcg32_random_t *rng) {
   Matrix random_ = createMatrix(rows, cols);
   float limit = sqrtf(6.0 / (fanIn + fanOut));
 
   uint64_t size = rows * cols;
   for (uint64_t i = 0; i < size; i++) {
-    random_.data[i] = -limit + ((float)rand() / (float)RAND_MAX) * (2 * limit);
+    random_.data[i] = ((pcg_float(rng) * 2.0 - 1.0) * limit);
   }
   return random_;
 }
 
 // for reluuuuu and linear (maybe)
-Matrix createHeMatrix(uint64_t rows, uint64_t cols, uint64_t fanIn) {
+Matrix createHeMatrix(uint64_t rows, uint64_t cols, uint64_t fanIn,
+                      pcg32_random_t *rng) {
   Matrix random_ = createMatrix(rows, cols);
 
   float limit = sqrtf(2.0 / (fanIn));
 
   uint64_t size = rows * cols;
   for (uint64_t i = 0; i < size; i++) {
-    random_.data[i] = -limit + ((float)rand() / (float)RAND_MAX) * (2 * limit);
+    random_.data[i] = ((pcg_float(rng) * 2.0 - 1.0) * limit);
   }
   return random_;
 }

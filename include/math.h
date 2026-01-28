@@ -1,4 +1,5 @@
 #pragma once
+#include "../include/pcg.h"
 #include <inttypes.h>
 #include <math.h>
 #include <stdbool.h>
@@ -20,10 +21,11 @@ typedef float (*LossFunction)(Matrix y_hat, Matrix y);
 
 // Matrix Creation
 Matrix createMatrix(uint64_t rows, uint64_t cols);
-Matrix createRandomMatrix(uint64_t rows, uint64_t cols);
+Matrix createRandomMatrix(uint64_t rows, uint64_t cols, pcg32_random_t *rng);
 Matrix createXavierMatrix(uint64_t rows, uint64_t cols, uint64_t fanIn,
-                          uint64_t fanOut);
-Matrix createHeMatrix(uint64_t rows, uint64_t cols, uint64_t fanIn);
+                          uint64_t fanOut, pcg32_random_t *rng);
+Matrix createHeMatrix(uint64_t rows, uint64_t cols, uint64_t fanIn,
+                      pcg32_random_t *rng);
 void copyMatrix(Matrix original, Matrix *target);
 
 // Matrix Ops

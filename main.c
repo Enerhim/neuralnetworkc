@@ -1,9 +1,11 @@
 #include "include/math.h"
 #include "include/ml.h"
 #include "include/mnist.h"
+#include "include/pcg.h"
 
 int main(void) {
-  srand(time(NULL));
+  pcg32_random_t rng;
+  pcg32_srandom_r(&rng, 42u, 54u);
 
   uint64_t n_train_images, n_test_images, n_train_labels, n_test_labels;
   Matrix X_train = load_mnist_dataset("./fashion_dat/train-images-idx3-ubyte",
@@ -15,10 +17,10 @@ int main(void) {
   Matrix y_test_labels = load_mnist_labels(
       "./fashion_dat/t10k-labels-idx1-ubyte", &n_test_labels, X_test.rows);
 
-  uint64_t units[] = {256, 128, 10};
+  uint64_t units[] = {256, 128, 128, 10};
   ActivationFunction activations[] = {relu, relu, softmax};
   NeuralNetwork net =
-      createNetwork(3, units, activations, 784, crossEntropyLoss);
+      createNetwork(3, units, activations, 784, crossEntropyLoss, &rng);
 
   loadNetwork(&net, "model_fashion.gay");
 
