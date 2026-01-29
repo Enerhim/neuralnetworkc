@@ -13,4 +13,4 @@ To build: </br>
 `gcc -O3 -march=native -mtune=native -ffast-math -funroll-loops -flto -fomit-frame-pointer -finline-functions -mavx2 -mfma src/math.c src/ml.c src/mnist.c main.c -o build.out -lm && ./build.out` </br>  </br>
 (Makefile coming soon. This was my first proper C project hence my code is not the most optimal. My primary focus was to learn neural networks on a deeper level and gain insight into how they are implemented. I also just wanted to learn about memory management and such in general. The model is really slow at training: 6-7~ seconds / epoch which I would like to later on improve with CUDA) 
 
-FURTHER SCOPE: Generalizing as a computational graph and autodifferentiation, testing regression, other optimizers, GPU optimization 
+FURTHER SCOPE: Generalizing as a computational graph and autodifferentiation, testing regression, other optimizers, GPU optimization, arena allocation
