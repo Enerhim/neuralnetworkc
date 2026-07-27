@@ -17,13 +17,11 @@ int main(void) {
   Matrix y_test_labels = load_mnist_labels(
       "./fashion_dat/t10k-labels-idx1-ubyte", &n_test_labels, X_test.rows);
 
-  uint64_t units[] = {256, 128, 128, 10};
+  uint64_t units[] = {256, 128, 10};
   ActivationFunction activations[] = {relu, relu, softmax};
-  NeuralNetwork net =
-      createNetwork(3, units, activations, 784, crossEntropyLoss, &rng);
+  NeuralNetwork net = createNetwork(3, units, activations, 784, crossEntropyLoss, &rng);
 
   loadNetwork(&net, "model_fashion.gay");
-
   Matrix y_train = mnist_hot_encode(y_labels);
   fitNetwork(&net, 0.1, 500, X_train, y_train, X_test, y_test_labels, 100);
 
